@@ -384,7 +384,7 @@ h3 {
   transform: translateX(50%);
   background:
     linear-gradient(135deg, rgba(252, 254, 255, 0.36), rgba(238, 247, 251, 0.22)),
-    url("/Art-The-Great/wp4515537-shoreline-wallpapers.jpg");
+    var(--about-bg-image);
   background-position: center;
   background-size: cover;
   z-index: -2;
@@ -717,6 +717,7 @@ h3 {
     min-height: 24rem;
     justify-content: center;
     padding-right: 0;
+    transform: none;
   }
 
   .portrait-stack {
@@ -742,6 +743,7 @@ h3 {
 
   .site-nav {
     justify-content: center;
+    gap: 0.45rem;
   }
 
   .hero {
@@ -784,6 +786,56 @@ h3 {
 
   .contact-list {
     justify-items: start;
+  }
+
+  .contact-primary {
+    width: 100%;
+  }
+
+  .contact-email,
+  .copy-button,
+  .social-link {
+    width: 100%;
+  }
+
+  .social-links {
+    width: 100%;
+  }
+
+  .social-link {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header {
+    gap: 0.75rem;
+    padding: 0.85rem 0.85rem 1rem;
+  }
+
+  .site-nav {
+    width: 100%;
+  }
+
+  .nav-link {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .portrait-card {
+    min-height: 20rem;
+  }
+
+  .portrait-stack {
+    width: min(20rem, 84vw);
+  }
+
+  .works-grid {
+    grid-auto-columns: minmax(250px, 86vw);
+  }
+
+  .works-arrow {
+    display: none;
   }
 }
 

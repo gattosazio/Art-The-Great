@@ -6,6 +6,7 @@ const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans"
 });
+const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
   title: "Arturo The Great",
@@ -19,7 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={manrope.variable}>{children}</body>
+      <body
+        className={manrope.variable}
+        style={{ "--about-bg-image": `url("${publicBasePath}/wp4515537-shoreline-wallpapers.jpg")` } as React.CSSProperties}
+      >
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState, type WheelEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { profile } from "@/data/profile";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -79,20 +79,32 @@ export default function Home() {
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
 
-  const handleWorksWheel = (event: WheelEvent<HTMLDivElement>) => {
+  useEffect(() => {
     const node = worksScrollerRef.current;
 
-    if (!node || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+    if (!node) {
       return;
     }
 
-    if (node.scrollWidth <= node.clientWidth) {
-      return;
-    }
+    const handleWorksWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+        return;
+      }
 
-    event.preventDefault();
-    node.scrollLeft += event.deltaY;
-  };
+      if (node.scrollWidth <= node.clientWidth) {
+        return;
+      }
+
+      event.preventDefault();
+      node.scrollLeft += event.deltaY;
+    };
+
+    node.addEventListener("wheel", handleWorksWheel, { passive: false });
+
+    return () => {
+      node.removeEventListener("wheel", handleWorksWheel);
+    };
+  }, []);
 
   const scrollWorksBy = (direction: "left" | "right") => {
     const node = worksScrollerRef.current;
@@ -215,7 +227,6 @@ export default function Home() {
           <div
             className="works-scroller"
             ref={worksScrollerRef}
-            onWheel={handleWorksWheel}
           >
             <div className="works-grid">
               {profile.works.map((work, index) => (
