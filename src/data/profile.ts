@@ -63,7 +63,7 @@ export const profile: Profile = {
       "I build simple and useful digital work. This space shares who I am, what I do, and a few projects I care about."
   },
   portrait: {
-    src: "/image.png",
+    src: "/profile-pic.jpg",
     alt: "Portrait placeholder for Arturo"
   },
   about: {
