@@ -22,7 +22,7 @@ type WorkItem = {
 };
 
 type ContactItem = {
-  type: "email" | "github" | "linkedin";
+  type: "email" | "github" | "linkedin" | "instagram";
   label: string;
   value: string;
   href: string;
@@ -58,21 +58,21 @@ export const profile: Profile = {
     { label: "Contact", href: "#contact" }
   ],
   intro: {
-    title: "Clean work. Clear ideas. Calm presence.",
+    title: "Hi! I'm Art Sumondong.",
     description:
       "I build simple and useful digital work. This space shares who I am, what I do, and a few projects I care about."
   },
   portrait: {
-    src: "/profile-photo.svg",
+    src: "/image.png",
     alt: "Portrait placeholder for Arturo"
   },
   about: {
     education: [
-      "Add your degree here",
-      "Add your school here",
-      "Add a short academic highlight"
+      "Bachelor of Science in Computer Applications major in Internet-of-Things",
+      "Mindanao State University - Iligan Institute of Technology",
+      "Summa Cum Laude, 2026"
     ],
-    hobbies: ["Sea walks", "Reading", "Photography"]
+    hobbies: ["Playing guitar", "Gaming", "Photography"]
   },
   works: [
     {
@@ -210,20 +210,26 @@ export const profile: Profile = {
     {
       type: "email",
       label: "Email",
-      value: "your@email.com",
-      href: "mailto:your@email.com"
+      value: "artsumondong7@email.com",
+      href: "mailto:artsumondong7@email.com"
     },
     {
       type: "github",
       label: "GitHub",
-      value: "github.com/yourname",
-      href: "https://github.com/yourname"
+      value: "github.com/gattosazio",
+      href: "https://github.com/gattosazio"
     },
     {
       type: "linkedin",
       label: "LinkedIn",
-      value: "linkedin.com/in/yourname",
-      href: "https://linkedin.com/in/yourname"
+      value: "linkedin.com/in/art-sumondong-83419640b/",
+      href: "https://www.linkedin.com/in/art-sumondong-83419640b/"
+    },
+    {
+      type: "instagram",
+      label: "Instagram",
+      value: "instagram.com/rt_kenttt/",
+      href: "https://www.instagram.com/rt_kenttt/"
     }
   ]
 };

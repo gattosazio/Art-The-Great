@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, type WheelEvent } from "react";
+import { useRef, useState, type WheelEvent } from "react";
 import { profile } from "@/data/profile";
 
 function GitHubIcon() {
@@ -26,8 +26,50 @@ function LinkedInIcon() {
   );
 }
 
+function InstagramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M7.75 3h8.5A4.75 4.75 0 0 1 21 7.75v8.5A4.75 4.75 0 0 1 16.25 21h-8.5A4.75 4.75 0 0 1 3 16.25v-8.5A4.75 4.75 0 0 1 7.75 3Zm0 1.5A3.25 3.25 0 0 0 4.5 7.75v8.5a3.25 3.25 0 0 0 3.25 3.25h8.5a3.25 3.25 0 0 0 3.25-3.25v-8.5a3.25 3.25 0 0 0-3.25-3.25h-8.5Zm4.25 2.75A4.75 4.75 0 1 1 7.25 12 4.76 4.76 0 0 1 12 7.25Zm0 1.5A3.25 3.25 0 1 0 15.25 12 3.25 3.25 0 0 0 12 8.75Zm4.88-2.12a1.12 1.12 0 1 1-1.13 1.12 1.12 1.12 0 0 1 1.13-1.12Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function ArrowLeftIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M14.5 5.5L8 12l6.5 6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M9.5 5.5L16 12l-6.5 6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 export default function Home() {
   const worksScrollerRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
 
@@ -44,6 +86,30 @@ export default function Home() {
 
     event.preventDefault();
     node.scrollLeft += event.deltaY;
+  };
+
+  const scrollWorksBy = (direction: "left" | "right") => {
+    const node = worksScrollerRef.current;
+
+    if (!node) {
+      return;
+    }
+
+    const amount = Math.min(380, node.clientWidth * 0.85);
+    node.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth"
+    });
+  };
+
+  const handleCopyEmail = async () => {
+    if (!emailContact) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(emailContact.value);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
   };
 
   return (
@@ -104,7 +170,7 @@ export default function Home() {
       <section className="content-section about-section" id="about">
         <div className="section-heading">
           <p className="eyebrow">About me</p>
-          <h2>Simple background, clear focus.</h2>
+          <h2>Little info about me.</h2>
         </div>
         <div className="info-grid">
           <article className="info-card">
@@ -129,42 +195,60 @@ export default function Home() {
       <section className="content-section" id="works">
         <div className="section-heading">
           <p className="eyebrow">Works</p>
-          <h2>Selected work.</h2>
+          <h2>My projects.</h2>
         </div>
-        <div
-          className="works-scroller"
-          ref={worksScrollerRef}
-          onWheel={handleWorksWheel}
-        >
-          <div className="works-grid">
-            {profile.works.map((work, index) => (
-              <a
-                className="work-card"
-                key={`${work.title}-${index}`}
-                href={work.link.href}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <div className="work-card-surface">
-                  <div className="work-image-wrap">
-                    <Image
-                      src={work.image.src}
-                      alt={work.image.alt}
-                      width={720}
-                      height={420}
-                      className="work-image"
-                    />
+        <div className="works-viewport">
+          <button
+            className="works-arrow works-arrow-left"
+            type="button"
+            aria-label="Scroll projects left"
+            onClick={() => scrollWorksBy("left")}
+          >
+            <ArrowLeftIcon />
+          </button>
+          <div
+            className="works-scroller"
+            ref={worksScrollerRef}
+            onWheel={handleWorksWheel}
+          >
+            <div className="works-grid">
+              {profile.works.map((work, index) => (
+                <a
+                  className="work-card"
+                  key={`${work.title}-${index}`}
+                  href={work.link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <div className="work-card-surface">
+                    <div className="work-image-wrap">
+                      <Image
+                        src={work.image.src}
+                        alt={work.image.alt}
+                        width={720}
+                        height={420}
+                        className="work-image"
+                      />
+                    </div>
+                    <div className="work-card-body">
+                      <p className="work-type">{work.type}</p>
+                      <h3>{work.title}</h3>
+                      <p>{work.description}</p>
+                      <span className="work-link">{work.link.label}</span>
+                    </div>
                   </div>
-                  <div className="work-card-body">
-                    <p className="work-type">{work.type}</p>
-                    <h3>{work.title}</h3>
-                    <p>{work.description}</p>
-                    <span className="work-link">{work.link.label}</span>
-                  </div>
-                </div>
-              </a>
-            ))}
+                </a>
+              ))}
+            </div>
           </div>
+          <button
+            className="works-arrow works-arrow-right"
+            type="button"
+            aria-label="Scroll projects right"
+            onClick={() => scrollWorksBy("right")}
+          >
+            <ArrowRightIcon />
+          </button>
         </div>
       </section>
 
@@ -172,13 +256,19 @@ export default function Home() {
         <div className="section-heading">
           <p className="eyebrow">Contact</p>
           <h2>Let&apos;s connect.</h2>
+          <p className="contact-note">Open to work, collaboration, and freelance projects.</p>
         </div>
         <div className="contact-list">
           {emailContact ? (
-            <a className="contact-card contact-email" href={emailContact.href}>
-              <span>{emailContact.label}</span>
-              <strong>{emailContact.value}</strong>
-            </a>
+            <div className="contact-primary">
+              <a className="contact-card contact-email" href={emailContact.href}>
+                <span>{emailContact.label}</span>
+                <strong>{emailContact.value}</strong>
+              </a>
+              <button className="copy-button" type="button" onClick={handleCopyEmail}>
+                {copied ? "Copied" : "Copy email"}
+              </button>
+            </div>
           ) : null}
 
           <div className="social-links" aria-label="Social links">
@@ -192,7 +282,14 @@ export default function Home() {
                 aria-label={contact.label}
                 title={contact.label}
               >
-                {contact.type === "github" ? <GitHubIcon /> : <LinkedInIcon />}
+                {contact.type === "github" ? (
+                  <GitHubIcon />
+                ) : contact.type === "linkedin" ? (
+                  <LinkedInIcon />
+                ) : (
+                  <InstagramIcon />
+                )}
+                <span className="social-label">{contact.label}</span>
               </a>
             ))}
           </div>
