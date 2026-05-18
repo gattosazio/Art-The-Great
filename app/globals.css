@@ -23,6 +23,11 @@ html {
   scroll-behavior: smooth;
 }
 
+.hero,
+.content-section {
+  scroll-margin-top: 5.5rem;
+}
+
 body {
   margin: 0;
   min-width: 320px;
