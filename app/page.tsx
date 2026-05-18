@@ -4,6 +4,12 @@ import Image from "next/image";
 import { useRef, useState, type WheelEvent } from "react";
 import { profile } from "@/data/profile";
 
+const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+function withBasePath(path: string) {
+  return path.startsWith("/") ? `${publicBasePath}${path}` : path;
+}
+
 function GitHubIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -155,7 +161,7 @@ export default function Home() {
             <div className="portrait-rings" aria-hidden="true" />
             <div className="portrait-frame">
               <Image
-                src={profile.portrait.src}
+                src={withBasePath(profile.portrait.src)}
                 alt={profile.portrait.alt}
                 className="portrait-image"
                 width={520}
@@ -223,7 +229,7 @@ export default function Home() {
                   <div className="work-card-surface">
                     <div className="work-image-wrap">
                       <Image
-                        src={work.image.src}
+                        src={withBasePath(work.image.src)}
                         alt={work.image.alt}
                         width={720}
                         height={420}
