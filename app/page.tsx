@@ -578,7 +578,7 @@ export default function Home() {
       </section>
 
       <section className="content-section" id="works">
-        <div className="section-heading">
+        <div className="section-heading works-heading">
           <h2>Arts and Crafts</h2>
         </div>
         <div className="works-viewport">

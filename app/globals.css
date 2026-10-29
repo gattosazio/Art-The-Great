@@ -387,8 +387,21 @@ ul {
   text-wrap: balance;
 }
 
+.works-heading h2 {
+  display: inline-block;
+  padding: 0.08em 0.12em;
+  background: var(--white);
+  color: var(--black);
+  text-transform: uppercase;
+}
+
+.works-heading {
+  border-bottom: 0;
+}
+
 .experience-section > .section-heading {
   justify-content: flex-end;
+  border-bottom: 0;
 }
 
 .experience-section > .section-heading h2 {
@@ -438,6 +451,10 @@ ul {
 
 .experience-item:first-child {
   padding-top: 0.25rem;
+}
+
+.experience-item:last-child {
+  border-bottom: 0;
 }
 
 .experience-list[data-motion-ready="true"] .experience-item {
@@ -597,6 +614,7 @@ ul {
 
 .tech-heading {
   align-items: center;
+  border-bottom: 0;
 }
 
 .tech-toggle {
@@ -1132,6 +1150,11 @@ ul {
 
   .section-heading {
     align-items: start;
+  }
+
+  .works-heading h2 {
+    font-size: clamp(1.35rem, 6vw, 2rem);
+    white-space: nowrap;
   }
 
   .experience-item {
