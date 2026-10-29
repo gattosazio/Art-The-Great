@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { faOpenai } from "@fortawesome/free-brands-svg-icons";
+import emailjs from "@emailjs/browser";
 import type { CSSProperties, FormEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { profile } from "@/data/profile";
@@ -23,6 +24,11 @@ import {
 import type { SimpleIcon } from "simple-icons";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const emailJsConfig = {
+  serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+  templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+  publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+};
 type HeroStyle = CSSProperties & {
   "--hero-reveal": string;
   "--mist-opacity": string;
@@ -155,6 +161,7 @@ export default function Home() {
   const [formStatus, setFormStatus] = useState("");
   const [emailCopyStatus, setEmailCopyStatus] = useState("");
   const [formOnCooldown, setFormOnCooldown] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
 
@@ -197,14 +204,11 @@ export default function Home() {
     }
   };
 
-  const handleInquirySubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleInquirySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!emailContact) {
-      throw new Error("An email contact must be configured before submitting an inquiry.");
-    }
-
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     if (String(formData.get("website") ?? "").trim()) {
       setFormStatus("This inquiry was blocked. Leave the website field blank.");
       return;
@@ -212,7 +216,7 @@ export default function Home() {
 
     const remainingCooldown = formCooldownUntilRef.current - Date.now();
     if (remainingCooldown > 0) {
-      setFormStatus(`Please wait ${Math.ceil(remainingCooldown / 1000)} seconds before opening another email draft.`);
+      setFormStatus(`Please wait ${Math.ceil(remainingCooldown / 1000)} seconds before sending another message.`);
       return;
     }
 
@@ -236,17 +240,45 @@ export default function Home() {
       return;
     }
 
-    const body = `From: ${name}\nEmail: ${senderEmail}\n\n${message}`;
-    const mailto = `mailto:${emailContact.value}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const { serviceId, templateId, publicKey } = emailJsConfig;
+    if (!serviceId || !templateId || !publicKey) {
+      setFormStatus("Message sending isn't configured for this build. Please use the email address shown on this page.");
+      return;
+    }
 
-    formCooldownUntilRef.current = Date.now() + 30_000;
-    setFormOnCooldown(true);
-    setFormStatus("Your email app should open with the inquiry ready to send.");
-    formCooldownTimerRef.current = setTimeout(() => {
-      formCooldownUntilRef.current = 0;
-      setFormOnCooldown(false);
-    }, 30_000);
-    window.location.href = mailto;
+    setIsSending(true);
+    setFormStatus("Sending your message…");
+
+    try {
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          from_name: name,
+          reply_to: senderEmail,
+          subject,
+          message
+        },
+        { publicKey }
+      );
+
+      form.reset();
+      formCooldownUntilRef.current = Date.now() + 30_000;
+      setFormOnCooldown(true);
+      setFormStatus("Message sent. Thanks for reaching out.");
+      if (formCooldownTimerRef.current !== null) {
+        clearTimeout(formCooldownTimerRef.current);
+      }
+      formCooldownTimerRef.current = setTimeout(() => {
+        formCooldownUntilRef.current = 0;
+        setFormOnCooldown(false);
+      }, 30_000);
+    } catch (error) {
+      console.error("EmailJS contact submission failed.", error instanceof Error ? error.message : "Unknown EmailJS error");
+      setFormStatus("Your message wasn't sent. Please try again or use the email address shown on this page.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const animateHeroReveal = () => {
@@ -511,7 +543,7 @@ export default function Home() {
           <p className="contact-note">Open to work, collaboration, and freelance projects.</p>
         </div>
         <div className="contact-list">
-          <form className="contact-form" onSubmit={handleInquirySubmit}>
+          <form className="contact-form" onSubmit={handleInquirySubmit} aria-busy={isSending}>
             <div className="contact-fields">
               <label className="contact-field contact-trap" aria-hidden="true">
                 <span>Leave this field empty</span>
@@ -535,11 +567,11 @@ export default function Home() {
               </label>
             </div>
             <div className="contact-submit-row">
-              <button className="button button-solid" type="submit" disabled={formOnCooldown}>
-                {formOnCooldown ? "Please wait before sending again" : "Open email to send"}
+              <button className="button button-solid" type="submit" disabled={formOnCooldown || isSending}>
+                {isSending ? "Sending message…" : formOnCooldown ? "Please wait before sending again" : "Send message"}
               </button>
               <p className="contact-form-note">
-                Your email app opens with the draft; the website doesn&apos;t send or store it. A brief browser-side cooldown helps avoid accidental repeats, but isn&apos;t a spam filter.
+                Messages are sent through EmailJS and aren&apos;t stored by this site. A brief browser-side cooldown helps avoid accidental repeats, but isn&apos;t a spam filter.
               </p>
             </div>
             <p className="contact-status" role="status" aria-live="polite">
