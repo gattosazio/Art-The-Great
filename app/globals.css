@@ -317,6 +317,14 @@ ul {
   transform: translateY(-2px);
 }
 
+.hero-actions .button:hover {
+  transform: none;
+}
+
+.contact-submit-row .button:hover {
+  transform: none;
+}
+
 .button-solid {
   background: var(--white);
   color: var(--black);

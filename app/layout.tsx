@@ -16,8 +16,8 @@ const silkscreen = Silkscreen({
 });
 
 export const metadata: Metadata = {
-  title: "ARTURO | Fullstack Engineer",
-  description: "Portfolio, projects, and contact information for Arturo Sumondong.",
+  title: "ARTURO",
+  description: "Portfolio, projects, and contact information for Art Sumondong.",
   icons: {
     icon: `${publicBasePath}/favicon.ico`,
     shortcut: `${publicBasePath}/favicon.ico`,
