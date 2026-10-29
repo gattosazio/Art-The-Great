@@ -477,7 +477,7 @@ export default function Home() {
 
       <section className="content-section" id="works">
         <div className="section-heading">
-          <h2>Selected works</h2>
+          <h2>Arts and Crafts</h2>
         </div>
         <div className="works-viewport">
           <div
