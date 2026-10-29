@@ -5,6 +5,7 @@ import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 import emailjs from "@emailjs/browser";
 import type { CSSProperties, FormEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import GhostCursor from "@/components/GhostCursor";
 import { profile } from "@/data/profile";
 import {
   siCplusplus,
@@ -420,109 +421,131 @@ export default function Home() {
       </div>
 
       <main className="page-shell">
-        <section
-          className="hero"
-          id="home"
-          aria-label="Introduction"
-          style={{ "--hero-reveal": "0%", "--mist-opacity": "0" } as HeroStyle}
-          onPointerMove={handleHeroPointerMove}
-          onPointerLeave={handleHeroPointerLeave}
-        >
-          <div className="hero-artwork" aria-hidden="true">
-            <Image
-              src={withBasePath("/under_first_page.png")}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="hero-art hero-art-under"
-            />
-            <Image
-              src={withBasePath("/first_page.png")}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="hero-art hero-art-cover"
-            />
-            <div className="hero-mist" />
-          </div>
-          <div className="hero-shade" aria-hidden="true" />
-          <div className="hero-content">
-            <h1>{profile.intro.title}</h1>
-            <p className="hero-role">{profile.role}</p>
-            <p className="lead">{profile.intro.description}</p>
-            <div className="hero-actions">
-              <a className="button button-solid" href="#works">
-                View works
-              </a>
-              <a className="button button-ghost" href="#contact">
-                Contact
-              </a>
-            </div>
-          </div>
-          <span className="hero-caption" aria-hidden="true">
-            Move right to reveal
-          </span>
-        </section>
-
-      <section
-        className="content-section tech-section"
-        id="stack"
-        aria-labelledby="tech-heading"
-        style={{ "--tech-bg-image": `url("${withBasePath("/about_me.jpg")}")` } as TechSectionStyle}
-      >
-        <div className="section-heading tech-heading">
-          <h2 id="tech-heading">Tools of the trade</h2>
-          <button
-            className="tech-toggle"
-            type="button"
-            aria-pressed={techPaused}
-            onClick={() => setTechPaused((paused) => !paused)}
+        <div className="intro-stack-surface">
+          <GhostCursor
+            color="#d6d6d3"
+            size={36}
+            trailLength={16}
+            inertia={0.28}
+            turbulence={0.35}
+            drift={0.12}
+            detail={0.7}
+            brightness={0.6}
+            bloomStrength={0.2}
+            bloomRadius={0.35}
+            grainIntensity={0.02}
+            fadeDelayMs={180}
+            fadeDurationMs={700}
+            clickPuff={false}
+            intro={false}
+            targetPixels={300000}
+            maxDevicePixelRatio={1.5}
+            zIndex={10}
+          />
+          <section
+            className="hero"
+            id="home"
+            aria-label="Introduction"
+            style={{ "--hero-reveal": "0%", "--mist-opacity": "0" } as HeroStyle}
+            onPointerMove={handleHeroPointerMove}
+            onPointerLeave={handleHeroPointerLeave}
           >
-            {techPaused ? "Resume" : "Pause"} carousel
-          </button>
-        </div>
-        <div
-          className="tech-marquee"
-          data-paused={techPaused}
-          aria-label="Technologies Arturo works with"
-        >
-          <div className="tech-track">
-            <ul className="tech-list">
-              {profile.technologies.map((technology) => (
-                <li className="tech-item" key={technology}>
-                  <TechnologyLogo technology={technology} />
-                  <span>{technology}</span>
-                </li>
-              ))}
-            </ul>
-            <ul className="tech-list" aria-hidden="true">
-              {profile.technologies.map((technology) => (
-                <li className="tech-item" key={`${technology}-repeat`}>
-                  <TechnologyLogo technology={technology} />
-                  <span>{technology}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+            <div className="hero-artwork" aria-hidden="true">
+              <Image
+                src={withBasePath("/under_first_page.png")}
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="hero-art hero-art-under"
+              />
+              <Image
+                src={withBasePath("/first_page.png")}
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="hero-art hero-art-cover"
+              />
+              <div className="hero-mist" />
+            </div>
+            <div className="hero-shade" aria-hidden="true" />
+            <div className="hero-content">
+              <h1>{profile.intro.title}</h1>
+              <p className="hero-role">{profile.role}</p>
+              <p className="lead">{profile.intro.description}</p>
+              <div className="hero-actions">
+                <a className="button button-solid" href="#works">
+                  View works
+                </a>
+                <a className="button button-ghost" href="#contact">
+                  Contact
+                </a>
+              </div>
+            </div>
+            <span className="hero-caption" aria-hidden="true">
+              Move right to reveal
+            </span>
+          </section>
 
-      <section
-        className="content-section experience-section"
-        id="experience"
-        aria-labelledby="experience-heading"
-        ref={experienceSectionRef}
-      >
-        <div className="section-heading">
-          <h2 id="experience-heading">Places I&apos;ve made my mark</h2>
+          <section
+            className="content-section tech-section"
+            id="stack"
+            aria-labelledby="tech-heading"
+            style={{ "--tech-bg-image": `url("${withBasePath("/about_me.jpg")}")` } as TechSectionStyle}
+          >
+            <div className="section-heading tech-heading">
+              <h2 id="tech-heading">Tools of the trade</h2>
+              <button
+                className="tech-toggle"
+                type="button"
+                aria-pressed={techPaused}
+                onClick={() => setTechPaused((paused) => !paused)}
+              >
+                {techPaused ? "Resume" : "Pause"} carousel
+              </button>
+            </div>
+            <div
+              className="tech-marquee"
+              data-paused={techPaused}
+              aria-label="Technologies Arturo works with"
+            >
+              <div className="tech-track">
+                <ul className="tech-list">
+                  {profile.technologies.map((technology) => (
+                    <li className="tech-item" key={technology}>
+                      <TechnologyLogo technology={technology} />
+                      <span>{technology}</span>
+                    </li>
+                  ))}
+                </ul>
+                <ul className="tech-list" aria-hidden="true">
+                  {profile.technologies.map((technology) => (
+                    <li className="tech-item" key={`${technology}-repeat`}>
+                      <TechnologyLogo technology={technology} />
+                      <span>{technology}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
         </div>
-        <ol
-          className="experience-list"
-          data-motion-ready={experienceMotionReady}
-          data-revealed={experienceRevealed}
+
+        <section
+          className="content-section experience-section"
+          id="experience"
+          aria-labelledby="experience-heading"
+          ref={experienceSectionRef}
         >
+          <div className="section-heading">
+            <h2 id="experience-heading">Places I&apos;ve made my mark</h2>
+          </div>
+          <ol
+            className="experience-list"
+            data-motion-ready={experienceMotionReady}
+            data-revealed={experienceRevealed}
+          >
           {profile.experience.map((item) => (
             <li
               className="experience-item"
