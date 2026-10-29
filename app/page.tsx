@@ -153,6 +153,7 @@ export default function Home() {
   const worksScrollerRef = useRef<HTMLDivElement>(null);
   const heroFrameRef = useRef<number | null>(null);
   const heroElementRef = useRef<HTMLElement | null>(null);
+  const experienceSectionRef = useRef<HTMLElement>(null);
   const heroRevealTargetRef = useRef(0);
   const heroRevealCurrentRef = useRef(0);
   const formCooldownUntilRef = useRef(0);
@@ -162,6 +163,8 @@ export default function Home() {
   const [emailCopyStatus, setEmailCopyStatus] = useState("");
   const [formOnCooldown, setFormOnCooldown] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [experienceMotionReady, setExperienceMotionReady] = useState(false);
+  const [experienceRevealed, setExperienceRevealed] = useState(false);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
 
@@ -171,6 +174,37 @@ export default function Home() {
         clearTimeout(formCooldownTimerRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const section = experienceSectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)
+    ) {
+      setExperienceRevealed(true);
+      return;
+    }
+
+    setExperienceMotionReady(true);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setExperienceRevealed(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.12 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
   }, []);
 
   const scrollWorksBy = (direction: "up" | "down") => {
@@ -475,8 +509,76 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="content-section" id="works">
+      <section
+        className="content-section experience-section"
+        id="experience"
+        aria-labelledby="experience-heading"
+        ref={experienceSectionRef}
+      >
         <div className="section-heading">
+          <h2 id="experience-heading">Places I&apos;ve made my mark</h2>
+        </div>
+        <ol
+          className="experience-list"
+          data-motion-ready={experienceMotionReady}
+          data-revealed={experienceRevealed}
+        >
+          {profile.experience.map((item) => (
+            <li
+              className="experience-item"
+              data-current={item.endDate === "Present"}
+              key={`${item.organization}-${item.startDate}`}
+            >
+              <p className="experience-dates">
+                <time dateTime={item.startDate}>
+                  {new Date(`${item.startDate}-01T00:00:00`).toLocaleDateString("en", {
+                    month: "short",
+                    year: "numeric",
+                    timeZone: "UTC"
+                  })}
+                </time>
+                {" – "}
+                {item.endDate === "Present" ? (
+                  <span>Present</span>
+                ) : (
+                  <time dateTime={item.endDate}>
+                    {new Date(`${item.endDate}-01T00:00:00`).toLocaleDateString("en", {
+                      month: "short",
+                      year: "numeric",
+                      timeZone: "UTC"
+                    })}
+                  </time>
+                )}
+              </p>
+              <span className="experience-marker" aria-hidden="true" />
+              <span className="experience-logo-frame">
+                <Image
+                  className="experience-logo"
+                  src={withBasePath(item.logo.src)}
+                  alt={item.logo.alt}
+                  width={64}
+                  height={64}
+                />
+              </span>
+              <div className="experience-details">
+                <h3>{item.role}</h3>
+                <p className="experience-organization">{item.organization}</p>
+                <p className="experience-location">{item.location}</p>
+                {item.highlights ? (
+                  <ul className="experience-highlights">
+                    {item.highlights.map((highlight) => (
+                      <li key={highlight}>{highlight}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="content-section" id="works">
+        <div className="section-heading works-heading">
           <h2>Arts and Crafts</h2>
         </div>
         <div className="works-viewport">

@@ -21,6 +21,19 @@ type WorkItem = {
   link: WorkLink;
 };
 
+type ExperienceItem = {
+  role: string;
+  organization: string;
+  logo: {
+    src: string;
+    alt: string;
+  };
+  startDate: string;
+  endDate: string;
+  location: string;
+  highlights?: string[];
+};
+
 type ContactItem = {
   type: "email" | "github" | "linkedin" | "instagram";
   label: string;
@@ -42,6 +55,7 @@ type Profile = {
     alt: string;
   };
   works: WorkItem[];
+  experience: ExperienceItem[];
   contacts: ContactItem[];
 };
 
@@ -51,6 +65,7 @@ export const profile: Profile = {
   navItems: [
     { label: "Home", href: "#home" },
     { label: "Stack", href: "#stack" },
+    { label: "Experience", href: "#experience" },
     { label: "Works", href: "#works" },
     { label: "Contact", href: "#contact" }
   ],
@@ -210,6 +225,35 @@ export const profile: Profile = {
         label: "View project",
         href: "https://github.com/yourname/luna-shore"
       }
+    }
+  ],
+  experience: [
+    {
+      role: "Research Assistant",
+      organization: "Mindanao State University - Iligan Institute of Technology",
+      logo: {
+        src: "/msu-iit-logo.png",
+        alt: "MSU-IIT seal"
+      },
+      startDate: "2026-07",
+      endDate: "Present",
+      location: "Iligan City, Northern Mindanao, Philippines"
+    },
+    {
+      role: "Backend Developer Intern",
+      organization: "meldCX",
+      logo: {
+        src: "/meldcx-logo.png",
+        alt: "meldCX logo"
+      },
+      startDate: "2026-01",
+      endDate: "2026-05",
+      location: "Cagayan de Oro City, Northern Mindanao, Philippines",
+      highlights: [
+        "Assisted in building and improving user interface and user experience.",
+        "Worked on server-side logic, primarily API integration.",
+        "Debugged issues reported by QA and reviewed pull requests."
+      ]
     }
   ],
   contacts: [
