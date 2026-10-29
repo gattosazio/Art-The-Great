@@ -99,11 +99,11 @@ function InstagramIcon() {
   );
 }
 
-function ArrowLeftIcon() {
+function ArrowUpIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M14.5 5.5L8 12l6.5 6.5"
+        d="M5.5 14.5L12 8l6.5 6.5"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -114,11 +114,11 @@ function ArrowLeftIcon() {
   );
 }
 
-function ArrowRightIcon() {
+function ArrowDownIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M9.5 5.5L16 12l-6.5 6.5"
+        d="M5.5 9.5L12 16l6.5-6.5"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -135,49 +135,52 @@ export default function Home() {
   const heroElementRef = useRef<HTMLElement | null>(null);
   const heroRevealTargetRef = useRef(0);
   const heroRevealCurrentRef = useRef(0);
+  const formCooldownUntilRef = useRef(0);
+  const formCooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [techPaused, setTechPaused] = useState(false);
+  const [formStatus, setFormStatus] = useState("");
+  const [emailCopyStatus, setEmailCopyStatus] = useState("");
+  const [formOnCooldown, setFormOnCooldown] = useState(false);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
 
   useEffect(() => {
-    const node = worksScrollerRef.current;
-
-    if (!node) {
-      return;
-    }
-
-    const handleWorksWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
-        return;
-      }
-
-      if (node.scrollWidth <= node.clientWidth) {
-        return;
-      }
-
-      event.preventDefault();
-      node.scrollLeft += event.deltaY;
-    };
-
-    node.addEventListener("wheel", handleWorksWheel, { passive: false });
-
     return () => {
-      node.removeEventListener("wheel", handleWorksWheel);
+      if (formCooldownTimerRef.current !== null) {
+        clearTimeout(formCooldownTimerRef.current);
+      }
     };
   }, []);
 
-  const scrollWorksBy = (direction: "left" | "right") => {
+  const scrollWorksBy = (direction: "up" | "down") => {
     const node = worksScrollerRef.current;
 
     if (!node) {
       return;
     }
 
-    const amount = Math.min(380, node.clientWidth * 0.85);
+    const amount = Math.min(380, node.clientHeight * 0.85);
     node.scrollBy({
-      left: direction === "left" ? -amount : amount,
+      top: direction === "up" ? -amount : amount,
       behavior: "smooth"
     });
+  };
+
+  const handleCopyEmail = async () => {
+    if (!emailContact) {
+      return;
+    }
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable in this browser.");
+      }
+
+      await navigator.clipboard.writeText(emailContact.value);
+      setEmailCopyStatus("Email copied to clipboard.");
+    } catch {
+      setEmailCopyStatus("Couldn't copy automatically. You can select and copy the email address.");
+    }
   };
 
   const handleInquirySubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -188,13 +191,47 @@ export default function Home() {
     }
 
     const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("name") ?? "");
-    const senderEmail = String(formData.get("email") ?? "");
-    const subject = String(formData.get("subject") ?? "");
-    const message = String(formData.get("message") ?? "");
+    if (String(formData.get("website") ?? "").trim()) {
+      setFormStatus("This inquiry was blocked. Leave the website field blank.");
+      return;
+    }
+
+    const remainingCooldown = formCooldownUntilRef.current - Date.now();
+    if (remainingCooldown > 0) {
+      setFormStatus(`Please wait ${Math.ceil(remainingCooldown / 1000)} seconds before opening another email draft.`);
+      return;
+    }
+
+    const name = String(formData.get("name") ?? "").trim();
+    const senderEmail = String(formData.get("email") ?? "").trim();
+    const subject = String(formData.get("subject") ?? "").trim();
+    const message = String(formData.get("message") ?? "").trim();
+
+    if (name.length < 2) {
+      setFormStatus("Please enter a name with at least 2 characters.");
+      return;
+    }
+
+    if (subject.length < 3) {
+      setFormStatus("Please enter a subject with at least 3 characters.");
+      return;
+    }
+
+    if (message.length < 20) {
+      setFormStatus("Please make your message at least 20 characters long.");
+      return;
+    }
+
     const body = `From: ${name}\nEmail: ${senderEmail}\n\n${message}`;
     const mailto = `mailto:${emailContact.value}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
+    formCooldownUntilRef.current = Date.now() + 30_000;
+    setFormOnCooldown(true);
+    setFormStatus("Your email app should open with the inquiry ready to send.");
+    formCooldownTimerRef.current = setTimeout(() => {
+      formCooldownUntilRef.current = 0;
+      setFormOnCooldown(false);
+    }, 30_000);
     window.location.href = mailto;
   };
 
@@ -279,7 +316,7 @@ export default function Home() {
         <header className="site-header">
           <a className="brand" href="#home" aria-label="ARTURO home">
             <Image
-              src={withBasePath("/arturo_logo.png")}
+              src={withBasePath("/arturo_logo-2.png")}
               alt="ARTURO"
               width={2000}
               height={2000}
@@ -397,17 +434,11 @@ export default function Home() {
           <h2>Selected works</h2>
         </div>
         <div className="works-viewport">
-          <button
-            className="works-arrow works-arrow-left"
-            type="button"
-            aria-label="Scroll projects left"
-            onClick={() => scrollWorksBy("left")}
-          >
-            <ArrowLeftIcon />
-          </button>
           <div
             className="works-scroller"
             ref={worksScrollerRef}
+            tabIndex={0}
+            aria-label="Selected works. Scroll vertically to browse projects."
           >
             <div className="works-grid">
               {profile.works.map((work, index) => (
@@ -439,14 +470,24 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <button
-            className="works-arrow works-arrow-right"
-            type="button"
-            aria-label="Scroll projects right"
-            onClick={() => scrollWorksBy("right")}
-          >
-            <ArrowRightIcon />
-          </button>
+          <div className="works-controls" role="group" aria-label="Project gallery controls">
+            <button
+              className="works-arrow"
+              type="button"
+              aria-label="Scroll projects up"
+              onClick={() => scrollWorksBy("up")}
+            >
+              <ArrowUpIcon />
+            </button>
+            <button
+              className="works-arrow"
+              type="button"
+              aria-label="Scroll projects down"
+              onClick={() => scrollWorksBy("down")}
+            >
+              <ArrowDownIcon />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -458,39 +499,56 @@ export default function Home() {
         <div className="contact-list">
           <form className="contact-form" onSubmit={handleInquirySubmit}>
             <div className="contact-fields">
+              <label className="contact-field contact-trap" aria-hidden="true">
+                <span>Leave this field empty</span>
+                <input name="website" tabIndex={-1} autoComplete="off" />
+              </label>
               <label className="contact-field">
                 <span>Your name</span>
-                <input autoComplete="name" name="name" required />
+                <input autoComplete="name" name="name" required minLength={2} maxLength={80} />
               </label>
               <label className="contact-field">
                 <span>Your email</span>
-                <input autoComplete="email" name="email" type="email" required />
+                <input autoComplete="email" name="email" type="email" required maxLength={254} />
               </label>
               <label className="contact-field contact-field-full">
                 <span>Subject</span>
-                <input name="subject" required maxLength={120} />
+                <input name="subject" required minLength={3} maxLength={120} />
               </label>
               <label className="contact-field contact-field-full">
                 <span>Your message</span>
-                <textarea name="message" rows={6} required maxLength={5000} />
+                <textarea name="message" rows={6} required minLength={20} maxLength={5000} />
               </label>
             </div>
             <div className="contact-submit-row">
-              <button className="button button-solid" type="submit">
-                Open email to send
+              <button className="button button-solid" type="submit" disabled={formOnCooldown}>
+                {formOnCooldown ? "Please wait before sending again" : "Open email to send"}
               </button>
               <p className="contact-form-note">
-                Your email app will open with your message ready to send.
+                Your email app opens with the draft; the website doesn&apos;t send or store it. A brief browser-side cooldown helps avoid accidental repeats, but isn&apos;t a spam filter.
               </p>
             </div>
+            <p className="contact-status" role="status" aria-live="polite">
+              {formStatus}
+            </p>
           </form>
 
           <div className="contact-details">
             {emailContact ? (
-              <a className="contact-email-link" href={emailContact.href}>
-                Or email me directly
-                <span>{emailContact.value}</span>
-              </a>
+              <div className="contact-email-link">
+                <span>Email address</span>
+                <button
+                  className="contact-email-copy"
+                  type="button"
+                  onClick={handleCopyEmail}
+                  aria-label={`Copy ${emailContact.value} to clipboard`}
+                >
+                  {emailContact.value}
+                </button>
+                <span className="contact-status" role="status" aria-live="polite">
+                  {emailCopyStatus}
+                </span>
+              </div>
             ) : null}
             <div className="social-links" aria-label="Social links">
               {socialContacts.map((contact) => (

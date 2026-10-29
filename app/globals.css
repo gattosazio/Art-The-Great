@@ -97,7 +97,6 @@ ul {
   width: 144px;
   height: 45px;
   overflow: hidden;
-  background: var(--muted);
 }
 
 .brand-logo {
@@ -105,7 +104,6 @@ ul {
   height: 100%;
   object-fit: cover;
   object-position: center 51%;
-  mix-blend-mode: multiply;
 }
 
 .site-nav {
@@ -488,13 +486,19 @@ ul {
 
 .works-viewport {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
   margin-top: 1.5rem;
 }
 
 .works-scroller {
-  overflow-x: auto;
-  padding: 0.25rem 0 1.25rem;
-  scroll-snap-type: x mandatory;
+  max-height: min(74svh, 720px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  scroll-snap-type: y mandatory;
   scrollbar-color: #666 #151515;
   scrollbar-width: thin;
   -ms-overflow-style: auto;
@@ -502,9 +506,8 @@ ul {
 
 .works-grid {
   display: grid;
-  width: max-content;
-  grid-auto-columns: minmax(280px, 350px);
-  grid-auto-flow: column;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   gap: 1rem;
 }
@@ -513,13 +516,13 @@ ul {
   display: block;
   min-width: 0;
   scroll-snap-align: start;
+  scroll-margin-block: 0.25rem;
   outline-offset: 5px;
 }
 
 .work-card-surface {
   display: flex;
-  min-height: 100%;
-  flex-direction: column;
+  min-height: 280px;
   overflow: hidden;
   background: var(--bg-raised);
   transition: background-color 200ms ease, transform 220ms ease;
@@ -533,7 +536,7 @@ ul {
 
 .work-image-wrap {
   position: relative;
-  aspect-ratio: 16 / 10;
+  flex: 0 0 min(38%, 420px);
   overflow: hidden;
   background: #252525;
 }
@@ -541,6 +544,8 @@ ul {
 .work-image {
   width: 100%;
   height: 100%;
+  position: absolute;
+  inset: 0;
   object-fit: cover;
   filter: grayscale(1) contrast(0.96);
   transition: filter 240ms ease, transform 340ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -555,8 +560,9 @@ ul {
 .work-card-body {
   display: flex;
   flex: 1;
+  min-width: 0;
   flex-direction: column;
-  padding: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
 }
 
 .work-type {
@@ -592,9 +598,6 @@ ul {
 }
 
 .works-arrow {
-  position: absolute;
-  top: 44%;
-  z-index: 2;
   display: inline-flex;
   width: 44px;
   height: 44px;
@@ -605,22 +608,19 @@ ul {
   background: #151515;
   color: var(--white);
   cursor: pointer;
-  transform: translateY(-50%);
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .works-arrow:hover {
   background: var(--white);
   color: var(--black);
-  transform: translateY(calc(-50% - 2px));
+  transform: translateY(-2px);
 }
 
-.works-arrow-left {
-  left: -1.35rem;
-}
-
-.works-arrow-right {
-  right: -1.35rem;
+.works-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .works-arrow svg {
@@ -725,16 +725,46 @@ ul {
   font-weight: 700;
 }
 
-.contact-email-link span {
+.contact-email-copy {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
   color: var(--white);
   font-size: 1rem;
   font-weight: 500;
+  font-family: inherit;
+  text-align: left;
   overflow-wrap: anywhere;
+  cursor: copy;
 }
 
-.contact-email-link:hover span {
+.contact-email-copy:hover {
   text-decoration: underline;
   text-underline-offset: 0.25em;
+}
+
+.contact-trap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.contact-status {
+  min-height: 1.4em;
+  color: var(--white);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.contact-submit-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .social-links {
@@ -774,6 +804,8 @@ ul {
 .tech-toggle:focus-visible,
 .work-card:focus-visible,
 .works-arrow:focus-visible,
+.works-scroller:focus-visible,
+.contact-email-copy:focus-visible,
 .social-link:focus-visible {
   outline: 2px solid #f1f1ee;
   outline-offset: 4px;
@@ -789,14 +821,6 @@ ul {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-  }
-
-  .works-arrow-left {
-    left: 0.5rem;
-  }
-
-  .works-arrow-right {
-    right: 0.5rem;
   }
 }
 
@@ -917,8 +941,19 @@ ul {
     font-size: 0.74rem;
   }
 
-  .works-grid {
-    grid-auto-columns: minmax(260px, 82vw);
+  .works-scroller {
+    max-height: 68svh;
+    padding-right: 0.25rem;
+  }
+
+  .work-card-surface {
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .work-image-wrap {
+    flex-basis: auto;
+    aspect-ratio: 16 / 10;
   }
 
   .contact-fields {

@@ -216,8 +216,8 @@ export const profile: Profile = {
     {
       type: "email",
       label: "Email",
-      value: "artsumondong7@email.com",
-      href: "mailto:artsumondong7@email.com"
+      value: "artsumondong7@gmail.com",
+      href: "mailto:artsumondong7@gmail.com"
     },
     {
       type: "github",
