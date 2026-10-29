@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T10:13:26.0327350+08:00",
+  "title": "Design System: ARTURO Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Soft White",
+        "canonical": "#f4f4f1",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Ink Black",
+        "canonical": "#090909",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Charcoal",
+        "canonical": "#141414",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#1b1b1b",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Near White",
+        "canonical": "#f0f0ee",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Silver Gray",
+        "canonical": "#b8b8b5",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "text-subtle": {
+        "role": "neutral",
+        "displayName": "Ash Gray",
+        "canonical": "#858582",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      },
+      "divider": {
+        "role": "neutral",
+        "displayName": "Charcoal Rule",
+        "canonical": "#383836",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(75% 0 0)", "oklch(95% 0 0)"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Manrope Display",
+        "purpose": "Hero introduction and top-level section titles."
+      },
+      "body": {
+        "displayName": "Manrope Text",
+        "purpose": "Body copy, navigation, and controls."
+      },
+      "title": {
+        "displayName": "Manrope Title",
+        "purpose": "Project and subsection titles."
+      },
+      "small": {
+        "displayName": "Manrope Small",
+        "purpose": "Supporting copy and labels."
+      }
+    },
+    "motion": [
+      {
+        "name": "reveal-ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Ease the layered hero image reveal."
+      },
+      {
+        "name": "technology-loop",
+        "value": "38s linear infinite",
+        "purpose": "Move the technology strip continuously; pause on request and disable under reduced motion."
+      }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "900px" },
+      { "name": "mobile", "value": "680px" },
+      { "name": "narrow", "value": "380px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "High-contrast action for the main next step.",
+      "html": "<button class=\"ds-primary\">View works</button>",
+      "css": ".ds-primary { background: var(--white, #f4f4f1); color: var(--black, #090909); border: 1px solid var(--white, #f4f4f1); border-radius: 2px; padding: 0.8rem 1.15rem; min-height: 48px; font: 700 0.9rem Manrope, sans-serif; transition: background-color 180ms ease, color 180ms ease, transform 180ms ease; } .ds-primary:hover { background: #d0d0cc; transform: translateY(-2px); } .ds-primary:focus-visible { outline: 2px solid #090909; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action over a dark surface.",
+      "html": "<button class=\"ds-ghost\">Contact</button>",
+      "css": ".ds-ghost { background: transparent; color: var(--white, #f4f4f1); border: 1px solid #d5d5d1; border-radius: 2px; padding: 0.8rem 1.15rem; min-height: 48px; font: 700 0.9rem Manrope, sans-serif; transition: background-color 180ms ease, color 180ms ease, transform 180ms ease; } .ds-ghost:hover { background: var(--white, #f4f4f1); color: var(--black, #090909); } .ds-ghost:focus-visible { outline: 2px solid #f4f4f1; outline-offset: 3px; }"
+    },
+    {
+      "name": "Centered Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-link",
+      "description": "Centered links on the neutral header, with a center-out hover underline.",
+      "html": "<a class=\"ds-nav\" href=\"#about\">About</a>",
+      "css": ".ds-nav { position: relative; color: var(--line, #383836); padding: 0.65rem 0.8rem; font: 700 0.88rem Manrope, sans-serif; text-decoration: none; } .ds-nav::after { position: absolute; right: 0.8rem; bottom: 0.4rem; left: 0.8rem; height: 1px; background: currentColor; content: ''; transform: scaleX(0); transform-origin: center; transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-nav:hover::after { transform: scaleX(1); } .ds-nav:focus-visible { outline: 2px solid #090909; outline-offset: 3px; }"
+    },
+    {
+      "name": "Project Surface",
+      "kind": "card",
+      "refersTo": "work-card",
+      "description": "Flat monochrome frame for each project preview.",
+      "html": "<article class=\"ds-project\"><h3>Project title</h3><p>Project description</p></article>",
+      "css": ".ds-project { background: var(--bg-raised, #141414); color: var(--text, #f0f0ee); padding: 1.25rem; transition: background-color 200ms ease, transform 220ms ease; } .ds-project:hover { background: var(--surface, #1b1b1b); transform: translateY(-4px); } .ds-project:focus-visible { outline: 2px solid #f4f4f1; outline-offset: 4px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Dark Samurai Monochrome",
+    "overview": "The portfolio pairs the user's samurai artwork with a quiet, high-contrast field of black, white, and gray. The work and supplied images lead; the interface stays restrained so the art, projects, and contact paths remain easy to find.\n\nThe former sea-colored identity is replaced by monochrome surfaces and one deliberate image reveal. The supplied about-me image becomes the full-width background for the technology strip, which begins directly below the hero. Use the supplied artwork rather than adding decorative cultural symbols or inventing new brand marks.",
+    "keyCharacteristics": [
+      "Black grounds with soft white-gray type.",
+      "The user's supplied artwork is the signature visual.",
+      "Flat surfaces, thin rules, and deliberate interaction."
+    ],
+    "rules": [
+      {
+        "name": "Monochrome Ground",
+        "body": "Keep the palette achromatic; use tonal contrast rather than a new accent color.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do keep the user-provided monochrome samurai and about artwork as the primary imagery.",
+      "Do preserve centered navigation and clear contact paths.",
+      "Do provide a non-hover control for image reveal and a pause control for the moving technology list."
+    ],
+    "donts": [
+      "Don't reintroduce the previous sea palette.",
+      "Don't convert the existing raster logo to SVG by changing its file format; use a genuine vector source or a transparency-ready asset if one becomes available.",
+      "Don't add decorative cultural symbols that are not part of the user's supplied artwork."
+    ]
+  }
+}

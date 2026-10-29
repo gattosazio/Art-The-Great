@@ -1,13 +1,83 @@
 "use client";
 
 import Image from "next/image";
+import { faOpenai } from "@fortawesome/free-brands-svg-icons";
+import type { CSSProperties, FormEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { profile } from "@/data/profile";
+import {
+  siCplusplus,
+  siCss,
+  siDocker,
+  siExpress,
+  siGithub,
+  siGithubactions,
+  siHtml5,
+  siJavascript,
+  siNextdotjs,
+  siNodedotjs,
+  siPython,
+  siReact,
+  siTypescript
+} from "simple-icons";
+import type { SimpleIcon } from "simple-icons";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+type HeroStyle = CSSProperties & {
+  "--hero-reveal": string;
+  "--mist-opacity": string;
+};
+type TechSectionStyle = CSSProperties & { "--tech-bg-image": string };
+
+const technologyIcons: Partial<Record<string, SimpleIcon>> = {
+  JavaScript: siJavascript,
+  TypeScript: siTypescript,
+  HTML: siHtml5,
+  CSS: siCss,
+  React: siReact,
+  "Next.js": siNextdotjs,
+  "Node.js": siNodedotjs,
+  "Express.js": siExpress,
+  Python: siPython,
+  "C++": siCplusplus,
+  GitHub: siGithub,
+  "GitHub Actions": siGithubactions,
+  "Docker Desktop": siDocker
+};
 
 function withBasePath(path: string) {
   return path.startsWith("/") ? `${publicBasePath}${path}` : path;
+}
+
+function TechnologyLogo({ technology }: { technology: string }) {
+  if (technology === "OpenAI") {
+    const [width, height, , , pathData] = faOpenai.icon;
+    const paths = Array.isArray(pathData) ? pathData : [pathData];
+
+    return (
+      <svg className="tech-icon" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+        {paths.map((path) => (
+          <path key={path} d={path} fill="currentColor" />
+        ))}
+      </svg>
+    );
+  }
+
+  const icon = technologyIcons[technology];
+
+  if (icon) {
+    return (
+      <svg className="tech-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d={icon.path} fill="currentColor" />
+      </svg>
+    );
+  }
+
+  return (
+    <span className="tech-icon tech-icon-monogram" aria-hidden="true">
+      {technology === "VS Code" ? "VS" : "C"}
+    </span>
+  );
 }
 
 function GitHubIcon() {
@@ -43,11 +113,11 @@ function InstagramIcon() {
   );
 }
 
-function ArrowLeftIcon() {
+function ArrowUpIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M14.5 5.5L8 12l6.5 6.5"
+        d="M5.5 14.5L12 8l6.5 6.5"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -58,11 +128,11 @@ function ArrowLeftIcon() {
   );
 }
 
-function ArrowRightIcon() {
+function ArrowDownIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M9.5 5.5L16 12l-6.5 6.5"
+        d="M5.5 9.5L12 16l6.5-6.5"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -75,47 +145,37 @@ function ArrowRightIcon() {
 
 export default function Home() {
   const worksScrollerRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
+  const heroFrameRef = useRef<number | null>(null);
+  const heroElementRef = useRef<HTMLElement | null>(null);
+  const heroRevealTargetRef = useRef(0);
+  const heroRevealCurrentRef = useRef(0);
+  const formCooldownUntilRef = useRef(0);
+  const formCooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [techPaused, setTechPaused] = useState(false);
+  const [formStatus, setFormStatus] = useState("");
+  const [emailCopyStatus, setEmailCopyStatus] = useState("");
+  const [formOnCooldown, setFormOnCooldown] = useState(false);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
 
   useEffect(() => {
-    const node = worksScrollerRef.current;
-
-    if (!node) {
-      return;
-    }
-
-    const handleWorksWheel = (event: WheelEvent) => {
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
-        return;
-      }
-
-      if (node.scrollWidth <= node.clientWidth) {
-        return;
-      }
-
-      event.preventDefault();
-      node.scrollLeft += event.deltaY;
-    };
-
-    node.addEventListener("wheel", handleWorksWheel, { passive: false });
-
     return () => {
-      node.removeEventListener("wheel", handleWorksWheel);
+      if (formCooldownTimerRef.current !== null) {
+        clearTimeout(formCooldownTimerRef.current);
+      }
     };
   }, []);
 
-  const scrollWorksBy = (direction: "left" | "right") => {
+  const scrollWorksBy = (direction: "up" | "down") => {
     const node = worksScrollerRef.current;
 
     if (!node) {
       return;
     }
 
-    const amount = Math.min(380, node.clientWidth * 0.85);
+    const amount = Math.min(380, node.clientHeight * 0.85);
     node.scrollBy({
-      left: direction === "left" ? -amount : amount,
+      top: direction === "up" ? -amount : amount,
       behavior: "smooth"
     });
   };
@@ -125,17 +185,158 @@ export default function Home() {
       return;
     }
 
-    await navigator.clipboard.writeText(emailContact.value);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable in this browser.");
+      }
+
+      await navigator.clipboard.writeText(emailContact.value);
+      setEmailCopyStatus("Email copied to clipboard.");
+    } catch {
+      setEmailCopyStatus("Couldn't copy automatically. You can select and copy the email address.");
+    }
+  };
+
+  const handleInquirySubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!emailContact) {
+      throw new Error("An email contact must be configured before submitting an inquiry.");
+    }
+
+    const formData = new FormData(event.currentTarget);
+    if (String(formData.get("website") ?? "").trim()) {
+      setFormStatus("This inquiry was blocked. Leave the website field blank.");
+      return;
+    }
+
+    const remainingCooldown = formCooldownUntilRef.current - Date.now();
+    if (remainingCooldown > 0) {
+      setFormStatus(`Please wait ${Math.ceil(remainingCooldown / 1000)} seconds before opening another email draft.`);
+      return;
+    }
+
+    const name = String(formData.get("name") ?? "").trim();
+    const senderEmail = String(formData.get("email") ?? "").trim();
+    const subject = String(formData.get("subject") ?? "").trim();
+    const message = String(formData.get("message") ?? "").trim();
+
+    if (name.length < 2) {
+      setFormStatus("Please enter a name with at least 2 characters.");
+      return;
+    }
+
+    if (subject.length < 3) {
+      setFormStatus("Please enter a subject with at least 3 characters.");
+      return;
+    }
+
+    if (message.length < 20) {
+      setFormStatus("Please make your message at least 20 characters long.");
+      return;
+    }
+
+    const body = `From: ${name}\nEmail: ${senderEmail}\n\n${message}`;
+    const mailto = `mailto:${emailContact.value}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    formCooldownUntilRef.current = Date.now() + 30_000;
+    setFormOnCooldown(true);
+    setFormStatus("Your email app should open with the inquiry ready to send.");
+    formCooldownTimerRef.current = setTimeout(() => {
+      formCooldownUntilRef.current = 0;
+      setFormOnCooldown(false);
+    }, 30_000);
+    window.location.href = mailto;
+  };
+
+  const animateHeroReveal = () => {
+    const hero = heroElementRef.current;
+
+    if (!hero) {
+      heroFrameRef.current = null;
+      return;
+    }
+
+    const current = heroRevealCurrentRef.current;
+    const target = heroRevealTargetRef.current;
+    const next = current + (target - current) * 0.028;
+    const settled = Math.abs(target - next) < 0.08;
+    const reveal = settled ? target : next;
+    const mistOpacity = Math.min(0.58, reveal / 120);
+
+    heroRevealCurrentRef.current = reveal;
+    hero.style.setProperty("--hero-reveal", `${reveal}%`);
+    hero.style.setProperty("--mist-opacity", `${mistOpacity}`);
+
+    if (settled) {
+      if (target === 0) {
+        hero.removeAttribute("data-mist-active");
+      }
+
+      heroFrameRef.current = null;
+      return;
+    }
+
+    heroFrameRef.current = requestAnimationFrame(animateHeroReveal);
+  };
+
+  const scheduleHeroReveal = (hero: HTMLElement, target: number) => {
+    heroElementRef.current = hero;
+    heroRevealTargetRef.current = target;
+
+    if (target > 0) {
+      hero.setAttribute("data-mist-active", "true");
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      heroRevealCurrentRef.current = target;
+      hero.style.setProperty("--hero-reveal", `${target}%`);
+      hero.style.setProperty("--mist-opacity", `${Math.min(0.58, target / 120)}`);
+
+      if (target === 0) {
+        hero.removeAttribute("data-mist-active");
+      }
+
+      return;
+    }
+
+    if (heroFrameRef.current === null) {
+      heroFrameRef.current = requestAnimationFrame(animateHeroReveal);
+    }
+  };
+
+  const handleHeroPointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "mouse") {
+      return;
+    }
+
+    const hero = event.currentTarget;
+    const bounds = hero.getBoundingClientRect();
+    const pointerPosition = (event.clientX - bounds.left) / bounds.width;
+    const reveal = Math.max(0, Math.min(92, ((pointerPosition - 0.4) / 0.42) * 92));
+
+    scheduleHeroReveal(hero, reveal);
+  };
+
+  const handleHeroPointerLeave = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "mouse") {
+      scheduleHeroReveal(event.currentTarget, 0);
+    }
   };
 
   return (
     <>
       <div className="site-header-shell">
         <header className="site-header">
-          <a className="brand" href="#home">
-            {profile.name}
+          <a className="brand" href="#home" aria-label="ARTURO home">
+            <Image
+              src={withBasePath("/arturo_logo-2.png")}
+              alt="ARTURO"
+              width={2000}
+              height={2000}
+              className="brand-logo"
+              priority
+            />
           </a>
           <nav className="site-nav" aria-label="Primary">
             {profile.navItems.map((item) => (
@@ -153,80 +354,105 @@ export default function Home() {
       </div>
 
       <main className="page-shell">
-      <section className="hero" id="home">
-        <div className="hero-copy">
-          <p className="eyebrow">{profile.role}</p>
-          <h1>{profile.intro.title}</h1>
-          <p className="lead">{profile.intro.description}</p>
-          <div className="hero-actions">
-            <a className="button button-solid" href="#works">
-              View works
-            </a>
-            <a className="button button-ghost" href="#contact">
-              Contact
-            </a>
+        <section
+          className="hero"
+          id="home"
+          aria-label="Introduction"
+          style={{ "--hero-reveal": "0%", "--mist-opacity": "0" } as HeroStyle}
+          onPointerMove={handleHeroPointerMove}
+          onPointerLeave={handleHeroPointerLeave}
+        >
+          <div className="hero-artwork" aria-hidden="true">
+            <Image
+              src={withBasePath("/under_first_page.png")}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="hero-art hero-art-under"
+            />
+            <Image
+              src={withBasePath("/first_page.png")}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="hero-art hero-art-cover"
+            />
+            <div className="hero-mist" />
           </div>
-        </div>
-
-        <div className="portrait-card">
-          <div className="portrait-stack">
-            <div className="portrait-rings" aria-hidden="true" />
-            <div className="portrait-frame">
-              <Image
-                src={withBasePath(profile.portrait.src)}
-                alt={profile.portrait.alt}
-                className="portrait-image"
-                width={520}
-                height={520}
-                priority
-              />
+          <div className="hero-shade" aria-hidden="true" />
+          <div className="hero-content">
+            <h1>{profile.intro.title}</h1>
+            <p className="hero-role">{profile.role}</p>
+            <p className="lead">{profile.intro.description}</p>
+            <div className="hero-actions">
+              <a className="button button-solid" href="#works">
+                View works
+              </a>
+              <a className="button button-ghost" href="#contact">
+                Contact
+              </a>
             </div>
           </div>
-        </div>
-      </section>
+          <span className="hero-caption" aria-hidden="true">
+            Move right to reveal
+          </span>
+        </section>
 
-      <section className="content-section about-section" id="about">
-        <div className="section-heading">
-          <p className="eyebrow">About me</p>
-          <h2>Little info about me.</h2>
+      <section
+        className="content-section tech-section"
+        id="stack"
+        aria-labelledby="tech-heading"
+        style={{ "--tech-bg-image": `url("${withBasePath("/about_me.jpg")}")` } as TechSectionStyle}
+      >
+        <div className="section-heading tech-heading">
+          <h2 id="tech-heading">Tools of the trade</h2>
+          <button
+            className="tech-toggle"
+            type="button"
+            aria-pressed={techPaused}
+            onClick={() => setTechPaused((paused) => !paused)}
+          >
+            {techPaused ? "Resume" : "Pause"} carousel
+          </button>
         </div>
-        <div className="info-grid">
-          <article className="info-card">
-            <h3>Education</h3>
-            <ul>
-              {profile.about.education.map((item) => (
-                <li key={item}>{item}</li>
+        <div
+          className="tech-marquee"
+          data-paused={techPaused}
+          aria-label="Technologies Arturo works with"
+        >
+          <div className="tech-track">
+            <ul className="tech-list">
+              {profile.technologies.map((technology) => (
+                <li className="tech-item" key={technology}>
+                  <TechnologyLogo technology={technology} />
+                  <span>{technology}</span>
+                </li>
               ))}
             </ul>
-          </article>
-          <article className="info-card">
-            <h3>Hobbies</h3>
-            <ul>
-              {profile.about.hobbies.map((item) => (
-                <li key={item}>{item}</li>
+            <ul className="tech-list" aria-hidden="true">
+              {profile.technologies.map((technology) => (
+                <li className="tech-item" key={`${technology}-repeat`}>
+                  <TechnologyLogo technology={technology} />
+                  <span>{technology}</span>
+                </li>
               ))}
             </ul>
-          </article>
+          </div>
         </div>
       </section>
 
       <section className="content-section" id="works">
         <div className="section-heading">
-          <p className="eyebrow">Works</p>
-          <h2>My projects.</h2>
+          <h2>Selected works</h2>
         </div>
         <div className="works-viewport">
-          <button
-            className="works-arrow works-arrow-left"
-            type="button"
-            aria-label="Scroll projects left"
-            onClick={() => scrollWorksBy("left")}
-          >
-            <ArrowLeftIcon />
-          </button>
           <div
             className="works-scroller"
             ref={worksScrollerRef}
+            tabIndex={0}
+            aria-label="Selected works. Scroll vertically to browse projects."
           >
             <div className="works-grid">
               {profile.works.map((work, index) => (
@@ -258,57 +484,108 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <button
-            className="works-arrow works-arrow-right"
-            type="button"
-            aria-label="Scroll projects right"
-            onClick={() => scrollWorksBy("right")}
-          >
-            <ArrowRightIcon />
-          </button>
+          <div className="works-controls" role="group" aria-label="Project gallery controls">
+            <button
+              className="works-arrow"
+              type="button"
+              aria-label="Scroll projects up"
+              onClick={() => scrollWorksBy("up")}
+            >
+              <ArrowUpIcon />
+            </button>
+            <button
+              className="works-arrow"
+              type="button"
+              aria-label="Scroll projects down"
+              onClick={() => scrollWorksBy("down")}
+            >
+              <ArrowDownIcon />
+            </button>
+          </div>
         </div>
       </section>
 
       <section className="content-section contact-section" id="contact">
         <div className="section-heading">
-          <p className="eyebrow">Contact</p>
-          <h2>Let&apos;s connect.</h2>
+          <h2>Let&apos;s connect</h2>
           <p className="contact-note">Open to work, collaboration, and freelance projects.</p>
         </div>
         <div className="contact-list">
-          {emailContact ? (
-            <div className="contact-primary">
-              <a className="contact-card contact-email" href={emailContact.href}>
-                <span>{emailContact.label}</span>
-                <strong>{emailContact.value}</strong>
-              </a>
-              <button className="copy-button" type="button" onClick={handleCopyEmail}>
-                {copied ? "Copied" : "Copy email"}
-              </button>
+          <form className="contact-form" onSubmit={handleInquirySubmit}>
+            <div className="contact-fields">
+              <label className="contact-field contact-trap" aria-hidden="true">
+                <span>Leave this field empty</span>
+                <input name="website" tabIndex={-1} autoComplete="off" />
+              </label>
+              <label className="contact-field">
+                <span>Your name</span>
+                <input autoComplete="name" name="name" required minLength={2} maxLength={80} />
+              </label>
+              <label className="contact-field">
+                <span>Your email</span>
+                <input autoComplete="email" name="email" type="email" required maxLength={254} />
+              </label>
+              <label className="contact-field contact-field-full">
+                <span>Subject</span>
+                <input name="subject" required minLength={3} maxLength={120} />
+              </label>
+              <label className="contact-field contact-field-full">
+                <span>Your message</span>
+                <textarea name="message" rows={6} required minLength={20} maxLength={5000} />
+              </label>
             </div>
-          ) : null}
+            <div className="contact-submit-row">
+              <button className="button button-solid" type="submit" disabled={formOnCooldown}>
+                {formOnCooldown ? "Please wait before sending again" : "Open email to send"}
+              </button>
+              <p className="contact-form-note">
+                Your email app opens with the draft; the website doesn&apos;t send or store it. A brief browser-side cooldown helps avoid accidental repeats, but isn&apos;t a spam filter.
+              </p>
+            </div>
+            <p className="contact-status" role="status" aria-live="polite">
+              {formStatus}
+            </p>
+          </form>
 
-          <div className="social-links" aria-label="Social links">
-            {socialContacts.map((contact) => (
-              <a
-                className="social-link"
-                key={contact.label}
-                href={contact.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={contact.label}
-                title={contact.label}
-              >
-                {contact.type === "github" ? (
-                  <GitHubIcon />
-                ) : contact.type === "linkedin" ? (
-                  <LinkedInIcon />
-                ) : (
-                  <InstagramIcon />
-                )}
-                <span className="social-label">{contact.label}</span>
-              </a>
-            ))}
+          <div className="contact-details">
+            {emailContact ? (
+              <div className="contact-email-link">
+                <span>Email address</span>
+                <button
+                  className="contact-email-copy"
+                  type="button"
+                  onClick={handleCopyEmail}
+                  aria-label={`Copy ${emailContact.value} to clipboard`}
+                >
+                  {emailContact.value}
+                </button>
+                <span className="contact-status" role="status" aria-live="polite">
+                  {emailCopyStatus}
+                </span>
+              </div>
+            ) : null}
+            <div className="social-links" aria-label="Social links">
+              {socialContacts.map((contact) => (
+                <a
+                  className="social-link"
+                  key={contact.label}
+                  href={contact.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={contact.label}
+                  title={contact.label}
+                >
+                  {contact.type === "github" ? (
+                    <GitHubIcon />
+                  ) : contact.type === "linkedin" ? (
+                    <LinkedInIcon />
+                  ) : (
+                    <InstagramIcon />
+                  )}
+                  <span className="social-label">{contact.label}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </section>

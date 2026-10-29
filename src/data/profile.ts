@@ -32,6 +32,7 @@ type Profile = {
   name: string;
   role: string;
   navItems: NavItem[];
+  technologies: string[];
   intro: {
     title: string;
     description: string;
@@ -40,22 +41,35 @@ type Profile = {
     src: string;
     alt: string;
   };
-  about: {
-    education: string[];
-    hobbies: string[];
-  };
   works: WorkItem[];
   contacts: ContactItem[];
 };
 
 export const profile: Profile = {
-  name: "Arturo The Great",
-  role: "Backend Developer",
+  name: "ARTURO",
+  role: "Fullstack Engineer",
   navItems: [
     { label: "Home", href: "#home" },
-    { label: "About", href: "#about" },
+    { label: "Stack", href: "#stack" },
     { label: "Works", href: "#works" },
     { label: "Contact", href: "#contact" }
+  ],
+  technologies: [
+    "JavaScript",
+    "TypeScript",
+    "HTML",
+    "CSS",
+    "React",
+    "Next.js",
+    "Node.js",
+    "Express.js",
+    "Python",
+    "C++",
+    "GitHub",
+    "GitHub Actions",
+    "Docker Desktop",
+    "VS Code",
+    "OpenAI"
   ],
   intro: {
     title: "Hi! I'm Art Sumondong.",
@@ -65,14 +79,6 @@ export const profile: Profile = {
   portrait: {
     src: "/profile-pic.jpg",
     alt: "Portrait placeholder for Arturo"
-  },
-  about: {
-    education: [
-      "Bachelor of Science in Computer Applications major in Internet-of-Things",
-      "Mindanao State University - Iligan Institute of Technology",
-      "Summa Cum Laude, 2026"
-    ],
-    hobbies: ["Playing guitar", "Gaming", "Photography"]
   },
   works: [
     {
@@ -210,8 +216,8 @@ export const profile: Profile = {
     {
       type: "email",
       label: "Email",
-      value: "artsumondong7@email.com",
-      href: "mailto:artsumondong7@email.com"
+      value: "artsumondong7@gmail.com",
+      href: "mailto:artsumondong7@gmail.com"
     },
     {
       type: "github",
