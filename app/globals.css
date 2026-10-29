@@ -192,7 +192,7 @@ ul {
 }
 
 .hero-art-under {
-  filter: grayscale(1) contrast(1.05) brightness(0.72);
+  filter: none;
 }
 
 .hero-art-cover {
