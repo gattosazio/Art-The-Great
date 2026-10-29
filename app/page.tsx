@@ -369,6 +369,7 @@ export default function Home() {
               className="brand-logo"
               priority
             />
+            <span className="brand-name">Arturo Inc.</span>
           </a>
           <nav className="site-nav" aria-label="Primary">
             {profile.navItems.map((item) => (
@@ -622,6 +623,9 @@ export default function Home() {
         </div>
       </section>
       </main>
+      <footer className="site-footer">
+        <p>© 2026 Art Sumondong</p>
+      </footer>
     </>
   );
 }
