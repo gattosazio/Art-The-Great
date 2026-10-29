@@ -382,7 +382,6 @@ export default function Home() {
               </a>
             ))}
           </nav>
-          <div className="header-spacer" aria-hidden="true" />
         </header>
       </div>
 
@@ -572,7 +571,7 @@ export default function Home() {
                 {isSending ? "Sending message…" : formOnCooldown ? "Please wait before sending again" : "Send message"}
               </button>
               <p className="contact-form-note">
-                Messages are sent through EmailJS and aren&apos;t stored by this site. A brief browser-side cooldown helps avoid accidental repeats, but isn&apos;t a spam filter.
+                I will read your message and respond as soon as possible. Please allow a few days for a reply.
               </p>
             </div>
             <p className="contact-status" role="status" aria-live="polite">
