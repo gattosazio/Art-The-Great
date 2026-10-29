@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 import type { CSSProperties, FormEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { profile } from "@/data/profile";
@@ -49,6 +50,19 @@ function withBasePath(path: string) {
 }
 
 function TechnologyLogo({ technology }: { technology: string }) {
+  if (technology === "OpenAI") {
+    const [width, height, , , pathData] = faOpenai.icon;
+    const paths = Array.isArray(pathData) ? pathData : [pathData];
+
+    return (
+      <svg className="tech-icon" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+        {paths.map((path) => (
+          <path key={path} d={path} fill="currentColor" />
+        ))}
+      </svg>
+    );
+  }
+
   const icon = technologyIcons[technology];
 
   if (icon) {

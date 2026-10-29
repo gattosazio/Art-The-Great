@@ -69,7 +69,7 @@ export const profile: Profile = {
     "GitHub Actions",
     "Docker Desktop",
     "VS Code",
-    "Codex"
+    "OpenAI"
   ],
   intro: {
     title: "Hi! I'm Art Sumondong.",
