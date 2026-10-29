@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Manrope, Silkscreen } from "next/font/google";
 import "./globals.css";
 
+const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans"
@@ -15,7 +17,12 @@ const silkscreen = Silkscreen({
 
 export const metadata: Metadata = {
   title: "ARTURO | Fullstack Engineer",
-  description: "Portfolio, projects, and contact information for Arturo Sumondong."
+  description: "Portfolio, projects, and contact information for Arturo Sumondong.",
+  icons: {
+    icon: `${publicBasePath}/favicon.ico`,
+    shortcut: `${publicBasePath}/favicon.ico`,
+    apple: `${publicBasePath}/favicon.png`
+  }
 };
 
 export default function RootLayout({
