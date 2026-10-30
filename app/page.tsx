@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 import emailjs from "@emailjs/browser";
-import type { CSSProperties, FormEvent, PointerEvent } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import FlexCarousel from "@/components/FlexCarousel";
 import GhostCursor from "@/components/GhostCursor";
+import Lanyard from "@/components/Lanyard";
 import { profile } from "@/data/profile";
 import {
   siCplusplus,
@@ -30,10 +31,6 @@ const emailJsConfig = {
   serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
   templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
   publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-};
-type HeroStyle = CSSProperties & {
-  "--hero-reveal": string;
-  "--mist-opacity": string;
 };
 type TechSectionStyle = CSSProperties & { "--tech-bg-image": string };
 
@@ -124,10 +121,6 @@ function InstagramIcon() {
 }
 
 export default function Home() {
-  const heroFrameRef = useRef<number | null>(null);
-  const heroElementRef = useRef<HTMLElement | null>(null);
-  const heroRevealTargetRef = useRef(0);
-  const heroRevealCurrentRef = useRef(0);
   const formCooldownUntilRef = useRef(0);
   const formCooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [techPaused, setTechPaused] = useState(false);
@@ -273,81 +266,6 @@ export default function Home() {
     }
   };
 
-  const animateHeroReveal = () => {
-    const hero = heroElementRef.current;
-
-    if (!hero) {
-      heroFrameRef.current = null;
-      return;
-    }
-
-    const current = heroRevealCurrentRef.current;
-    const target = heroRevealTargetRef.current;
-    const next = current + (target - current) * 0.028;
-    const settled = Math.abs(target - next) < 0.08;
-    const reveal = settled ? target : next;
-    const mistOpacity = Math.min(0.58, reveal / 120);
-
-    heroRevealCurrentRef.current = reveal;
-    hero.style.setProperty("--hero-reveal", `${reveal}%`);
-    hero.style.setProperty("--mist-opacity", `${mistOpacity}`);
-
-    if (settled) {
-      if (target === 0) {
-        hero.removeAttribute("data-mist-active");
-      }
-
-      heroFrameRef.current = null;
-      return;
-    }
-
-    heroFrameRef.current = requestAnimationFrame(animateHeroReveal);
-  };
-
-  const scheduleHeroReveal = (hero: HTMLElement, target: number) => {
-    heroElementRef.current = hero;
-    heroRevealTargetRef.current = target;
-
-    if (target > 0) {
-      hero.setAttribute("data-mist-active", "true");
-    }
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      heroRevealCurrentRef.current = target;
-      hero.style.setProperty("--hero-reveal", `${target}%`);
-      hero.style.setProperty("--mist-opacity", `${Math.min(0.58, target / 120)}`);
-
-      if (target === 0) {
-        hero.removeAttribute("data-mist-active");
-      }
-
-      return;
-    }
-
-    if (heroFrameRef.current === null) {
-      heroFrameRef.current = requestAnimationFrame(animateHeroReveal);
-    }
-  };
-
-  const handleHeroPointerMove = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "mouse") {
-      return;
-    }
-
-    const hero = event.currentTarget;
-    const bounds = hero.getBoundingClientRect();
-    const pointerPosition = (event.clientX - bounds.left) / bounds.width;
-    const reveal = Math.max(0, Math.min(92, ((pointerPosition - 0.4) / 0.42) * 92));
-
-    scheduleHeroReveal(hero, reveal);
-  };
-
-  const handleHeroPointerLeave = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType === "mouse") {
-      scheduleHeroReveal(event.currentTarget, 0);
-    }
-  };
-
   return (
     <>
       <div className="site-header-shell">
@@ -403,46 +321,43 @@ export default function Home() {
             className="hero"
             id="home"
             aria-label="Introduction"
-            style={{ "--hero-reveal": "0%", "--mist-opacity": "0" } as HeroStyle}
-            onPointerMove={handleHeroPointerMove}
-            onPointerLeave={handleHeroPointerLeave}
           >
             <div className="hero-artwork" aria-hidden="true">
-              <Image
-                src={withBasePath("/under_first_page.png")}
-                alt=""
-                fill
-                priority
-                sizes="100vw"
-                className="hero-art hero-art-under"
-              />
               <Image
                 src={withBasePath("/first_page.png")}
                 alt=""
                 fill
                 priority
                 sizes="100vw"
-                className="hero-art hero-art-cover"
+                className="hero-art"
               />
-              <div className="hero-mist" />
             </div>
             <div className="hero-shade" aria-hidden="true" />
-            <div className="hero-content">
-              <h1>{profile.intro.title}</h1>
-              <p className="hero-role">{profile.role}</p>
-              <p className="lead">{profile.intro.description}</p>
-              <div className="hero-actions">
-                <a className="button button-solid" href="#works">
-                  View works
-                </a>
-                <a className="button button-ghost" href="#contact">
-                  Contact
-                </a>
+            <div className="hero-layout">
+              <div className="hero-content">
+                <h1>{profile.intro.title}</h1>
+                <p className="hero-role">{profile.role}</p>
+                <p className="lead">{profile.intro.description}</p>
+                <div className="hero-actions">
+                  <a className="button button-solid" href="#works">
+                    View works
+                  </a>
+                  <a className="button button-ghost" href="#contact">
+                    Contact
+                  </a>
+                </div>
+              </div>
+              <div className="hero-lanyard-stage">
+                <Lanyard
+                  frontImage={withBasePath("/my_love.jpg")}
+                  size={0.58}
+                  breeze={0.82}
+                  intro
+                />
+                <p className="hero-lanyard-hint" aria-hidden="true">
+                </p>
               </div>
             </div>
-            <span className="hero-caption" aria-hidden="true">
-              Move right to reveal
-            </span>
           </section>
 
           <section

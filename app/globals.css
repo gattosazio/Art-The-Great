@@ -201,7 +201,7 @@ ul {
   position: relative;
   display: flex;
   min-height: min(840px, calc(100svh - 76px));
-  align-items: center;
+  align-items: stretch;
   overflow: hidden;
   isolation: isolate;
   background: #090909;
@@ -227,67 +227,6 @@ ul {
   filter: grayscale(1);
 }
 
-.hero-art-under {
-  filter: none;
-}
-
-.hero-art-cover {
-  clip-path: inset(0 var(--hero-reveal) 0 0);
-  filter: grayscale(1) contrast(0.96) brightness(0.95);
-  transition: none;
-}
-
-.hero-mist {
-  position: absolute;
-  top: -12%;
-  bottom: -12%;
-  left: calc(100% - var(--hero-reveal));
-  width: clamp(14rem, 30vw, 30rem);
-  opacity: var(--mist-opacity, 0);
-  pointer-events: none;
-  transform: translateX(-50%);
-  transition: opacity 1.4s ease-out;
-  mix-blend-mode: screen;
-  mask-image: linear-gradient(90deg, transparent, var(--black) 18%, var(--black) 76%, transparent);
-}
-
-.hero-mist::before,
-.hero-mist::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    radial-gradient(ellipse at 37% 14%, rgb(244 244 241 / 48%), transparent 44%),
-    radial-gradient(ellipse at 66% 36%, rgb(244 244 241 / 32%), transparent 48%),
-    radial-gradient(ellipse at 32% 61%, rgb(244 244 241 / 38%), transparent 45%),
-    radial-gradient(ellipse at 64% 87%, rgb(244 244 241 / 30%), transparent 45%);
-  filter: blur(22px);
-  animation: mist-drift 14s ease-in-out infinite alternate paused;
-}
-
-.hero-mist::after {
-  inset: 10% -20%;
-  opacity: 0.72;
-  filter: blur(34px);
-  animation-delay: -6s;
-  animation-duration: 19s;
-}
-
-.hero[data-mist-active="true"] .hero-mist::before,
-.hero[data-mist-active="true"] .hero-mist::after {
-  animation-play-state: running;
-}
-
-@keyframes mist-drift {
-  from {
-    transform: translate3d(-9%, -2%, 0) scale(0.92);
-  }
-
-  to {
-    transform: translate3d(10%, 2%, 0) scale(1.08);
-  }
-}
-
 .hero-shade {
   background:
     linear-gradient(90deg, #090909 0%, rgb(9 9 9 / 94%) 26%, rgb(9 9 9 / 55%) 51%, rgb(9 9 9 / 8%) 100%),
@@ -295,10 +234,43 @@ ul {
   pointer-events: none;
 }
 
-.hero-content {
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  align-items: stretch;
   width: min(calc(100% - 3rem), var(--max-width));
   margin-inline: auto;
-  padding: 6rem 0 8rem;
+  gap: clamp(1.5rem, 4vw, 4rem);
+}
+
+.hero-content {
+  width: 100%;
+  max-width: 46rem;
+  margin: 0;
+  padding: 5rem 0 6rem;
+}
+
+.hero-lanyard-stage {
+  position: relative;
+  width: min(100%, 30rem);
+  height: 100%;
+  min-height: 0;
+  justify-self: end;
+}
+
+.hero-lanyard-stage .lanyard {
+  height: 100%;
+}
+
+.hero-lanyard-hint {
+  position: absolute;
+  right: 0;
+  bottom: 0.8rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-align: right;
+  text-transform: uppercase;
 }
 
 .hero h1 {
@@ -378,16 +350,6 @@ ul {
 .button-ghost:hover {
   background: var(--white);
   color: var(--black);
-}
-
-.hero-caption {
-  position: absolute;
-  bottom: 2.45rem;
-  left: max(1.5rem, calc((100% - var(--max-width)) / 2));
-  color: var(--muted);
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  pointer-events: none;
 }
 
 .content-section {
@@ -1361,16 +1323,20 @@ ul {
     align-items: flex-end;
   }
 
-  .hero-art-cover {
-    object-position: 64% center;
+  .hero-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(18rem, 40svh, 22rem) auto;
+    width: calc(100% - 2.5rem);
+    min-height: inherit;
+    align-content: stretch;
+    gap: 0;
   }
 
-  .hero-mist {
-    width: clamp(10rem, 52vw, 17rem);
-  }
-
-  .hero-art-under {
-    object-position: center;
+  .hero-lanyard-stage {
+    width: min(100%, 22rem);
+    height: 100%;
+    min-height: 0;
+    justify-self: center;
   }
 
   .hero-shade {
@@ -1380,8 +1346,8 @@ ul {
   }
 
   .hero-content {
-    width: calc(100% - 2.5rem);
-    padding: 4rem 0 8.5rem;
+    width: 100%;
+    padding: 1.5rem 0 5.5rem;
   }
 
   .hero h1 {
@@ -1401,12 +1367,9 @@ ul {
     line-height: 1.65;
   }
 
-  .hero-caption {
-    bottom: 1.4rem;
-    left: 1.25rem;
-    max-width: 11ch;
-    font-size: 0.72rem;
-    line-height: 1.4;
+  .hero-lanyard-hint {
+    bottom: 0.35rem;
+    font-size: 0.58rem;
   }
 
   .content-section {
@@ -1559,12 +1522,6 @@ ul {
 
   .tech-toggle {
     display: none;
-  }
-
-  .hero-mist::before,
-  .hero-mist::after {
-    animation: none;
-    filter: blur(10px);
   }
 
   .works-project-list {
