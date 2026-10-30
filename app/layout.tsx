@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Silkscreen } from "next/font/google";
 import "./globals.css";
 
@@ -23,6 +23,13 @@ export const metadata: Metadata = {
     shortcut: `${publicBasePath}/favicon.ico`,
     apple: `${publicBasePath}/favicon.png`
   }
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false
 };
 
 export default function RootLayout({
