@@ -1,13 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 import emailjs from "@emailjs/browser";
-import type { CSSProperties, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import FlexCarousel from "@/components/FlexCarousel";
-import GhostCursor from "@/components/GhostCursor";
-import Lanyard from "@/components/Lanyard";
 import { profile } from "@/data/profile";
 import {
   siCplusplus,
@@ -32,7 +30,16 @@ const emailJsConfig = {
   templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
   publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
 };
-type TechSectionStyle = CSSProperties & { "--tech-bg-image": string };
+
+const FlexCarousel = dynamic(() => import("@/components/FlexCarousel"), {
+  ssr: false,
+  loading: () => <div className="works-carousel-loading" aria-hidden="true" />
+});
+const GhostCursor = dynamic(() => import("@/components/GhostCursor"), { ssr: false });
+const Lanyard = dynamic(() => import("@/components/Lanyard"), {
+  ssr: false,
+  loading: () => <LanyardPoster />
+});
 
 const WORKS_PER_PAGE = 5;
 
@@ -54,6 +61,20 @@ const technologyIcons: Partial<Record<string, SimpleIcon>> = {
 
 function withBasePath(path: string) {
   return path.startsWith("/") ? `${publicBasePath}${path}` : path;
+}
+
+function LanyardPoster() {
+  return (
+    <div className="hero-lanyard-poster" aria-hidden="true">
+      <Image
+        src={withBasePath("/my_love.jpg")}
+        alt=""
+        fill
+        sizes="(max-width: 680px) 25vw, 19vw"
+        priority
+      />
+    </div>
+  );
 }
 
 function TechnologyLogo({ technology }: { technology: string }) {
@@ -124,6 +145,9 @@ export default function Home() {
   const formCooldownUntilRef = useRef(0);
   const formCooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [techPaused, setTechPaused] = useState(false);
+  const [lanyardReady, setLanyardReady] = useState(false);
+  const [ghostCursorReady, setGhostCursorReady] = useState(false);
+  const [worksNearViewport, setWorksNearViewport] = useState(false);
   const [formStatus, setFormStatus] = useState("");
   const [emailCopyStatus, setEmailCopyStatus] = useState("");
   const [formOnCooldown, setFormOnCooldown] = useState(false);
@@ -132,6 +156,7 @@ export default function Home() {
   const viewedWorkIndicesRef = useRef(new Set<number>([0]));
   const [allWorksViewed, setAllWorksViewed] = useState(false);
   const [worksPage, setWorksPage] = useState(0);
+  const worksSectionRef = useRef<HTMLElement | null>(null);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
   const activeWork = profile.works[activeWorkIndex] ?? profile.works[0];
@@ -157,6 +182,36 @@ export default function Home() {
         clearTimeout(formCooldownTimerRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const lanyardTimer = window.setTimeout(() => setLanyardReady(true), 350);
+    const pointerSupportsCursor = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const cursorTimer = pointerSupportsCursor
+      ? window.setTimeout(() => setGhostCursorReady(true), 1200)
+      : null;
+
+    return () => {
+      window.clearTimeout(lanyardTimer);
+      if (cursorTimer !== null) window.clearTimeout(cursorTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    const section = worksSectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setWorksNearViewport(true);
+        observer.disconnect();
+      },
+      { rootMargin: "500px 0px" }
+    );
+    observer.observe(section);
+
+    return () => observer.disconnect();
   }, []);
 
   const handleWorkChange = (index: number) => {
@@ -297,26 +352,28 @@ export default function Home() {
 
       <main className="page-shell">
         <div className="intro-stack-surface">
-          <GhostCursor
-            color="#d6d6d3"
-            size={36}
-            trailLength={16}
-            inertia={0.28}
-            turbulence={0.35}
-            drift={0.12}
-            detail={0.7}
-            brightness={0.6}
-            bloomStrength={0.2}
-            bloomRadius={0.35}
-            grainIntensity={0.02}
-            fadeDelayMs={180}
-            fadeDurationMs={700}
-            clickPuff={false}
-            intro={false}
-            targetPixels={300000}
-            maxDevicePixelRatio={1.5}
-            zIndex={10}
-          />
+          {ghostCursorReady ? (
+            <GhostCursor
+              color="#d6d6d3"
+              size={36}
+              trailLength={16}
+              inertia={0.28}
+              turbulence={0.35}
+              drift={0.12}
+              detail={0.7}
+              brightness={0.6}
+              bloomStrength={0.2}
+              bloomRadius={0.35}
+              grainIntensity={0.02}
+              fadeDelayMs={180}
+              fadeDurationMs={700}
+              clickPuff={false}
+              intro={false}
+              targetPixels={300000}
+              maxDevicePixelRatio={1.5}
+              zIndex={10}
+            />
+          ) : null}
           <section
             className="hero"
             id="home"
@@ -348,16 +405,20 @@ export default function Home() {
                 </div>
               </div>
               <div className="hero-lanyard-stage">
-                <Lanyard
-                  frontImage={withBasePath("/my_love.jpg")}
-                  backImage={withBasePath("/my_photo.jpg")}
-                  size={0.58}
-                  mobileSize={0.24}
-                  anchor={0.63}
-                  strapLength={0.35}
-                  breeze={0.82}
-                  intro
-                />
+                {lanyardReady ? (
+                  <Lanyard
+                    frontImage={withBasePath("/my_love.jpg")}
+                    backImage={withBasePath("/my_photo.jpg")}
+                    size={0.58}
+                    mobileSize={0.24}
+                    anchor={0.63}
+                    strapLength={0.35}
+                    breeze={0.82}
+                    intro
+                  />
+                ) : (
+                  <LanyardPoster />
+                )}
                 <p className="hero-lanyard-hint" aria-hidden="true">
                 </p>
               </div>
@@ -368,8 +429,15 @@ export default function Home() {
             className="content-section tech-section"
             id="stack"
             aria-labelledby="tech-heading"
-            style={{ "--tech-bg-image": `url("${withBasePath("/about_me.jpg")}")` } as TechSectionStyle}
           >
+            <Image
+              className="tech-section-background"
+              src={withBasePath("/about_me.webp")}
+              alt=""
+              fill
+              sizes="100vw"
+              loading="lazy"
+            />
             <div className="section-heading tech-heading">
               <h2 id="tech-heading">Tools of the trade</h2>
               <button
@@ -474,7 +542,12 @@ export default function Home() {
         </ol>
       </section>
 
-      <section className="content-section" id="works" aria-labelledby="works-heading">
+      <section
+        className="content-section"
+        id="works"
+        aria-labelledby="works-heading"
+        ref={worksSectionRef}
+      >
         <div className="section-heading works-heading">
           <h2 id="works-heading">Arts and Crafts</h2>
         </div>
@@ -482,25 +555,35 @@ export default function Home() {
           {!allWorksViewed ? (
             <>
               <div className="works-carousel-frame">
-                <FlexCarousel
-                  items={workCarouselItems}
-                  preset="arch"
-                  intro="bloom"
-                  cardHeight={0.58}
-                  gap={16}
-                  fit="landscape"
-                  radius={2}
-                  bend={0.16}
-                  reach={0.46}
-                  curl="twist"
-                  dispersion={0.45}
-                  squeeze={0.12}
-                  focusOnClick
-                  captions={false}
-                  captureWheel
-                  ariaLabel="Selected project previews"
-                  onChange={handleWorkChange}
-                />
+                {worksNearViewport ? (
+                  <FlexCarousel
+                    items={workCarouselItems}
+                    preset="arch"
+                    intro="bloom"
+                    cardHeight={0.58}
+                    gap={16}
+                    fit="landscape"
+                    radius={2}
+                    bend={0.16}
+                    reach={0.46}
+                    curl="twist"
+                    dispersion={0.45}
+                    squeeze={0.12}
+                    focusOnClick
+                    captions={false}
+                    captureWheel
+                    ariaLabel="Selected project previews"
+                    onChange={handleWorkChange}
+                  />
+                ) : (
+                  <Image
+                    className="works-carousel-poster"
+                    src={withBasePath(activeWork.image.src)}
+                    alt={activeWork.image.alt}
+                    fill
+                    sizes="(max-width: 680px) 100vw, 90vw"
+                  />
+                )}
               </div>
               <div className="works-project-info">
                 {activeWork ? (
