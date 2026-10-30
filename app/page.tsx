@@ -36,7 +36,8 @@ const FlexCarousel = dynamic(() => import("@/components/FlexCarousel"), {
   loading: () => <div className="works-carousel-loading" aria-hidden="true" />
 });
 const GhostCursor = dynamic(() => import("@/components/GhostCursor"), { ssr: false });
-const Lanyard = dynamic(() => import("@/components/Lanyard"), {
+const loadLanyard = () => import("@/components/Lanyard");
+const Lanyard = dynamic(loadLanyard, {
   ssr: false,
   loading: () => null
 });
@@ -61,6 +62,21 @@ const technologyIcons: Partial<Record<string, SimpleIcon>> = {
 
 function withBasePath(path: string) {
   return path.startsWith("/") ? `${publicBasePath}${path}` : path;
+}
+
+const lanyardFrontImage = withBasePath("/my_love.jpg");
+const lanyardBackImage = withBasePath("/my_photo.jpg");
+const lanyardImagePreloads: HTMLImageElement[] = [];
+
+if (typeof window !== "undefined") {
+  void loadLanyard();
+
+  for (const src of [lanyardFrontImage, lanyardBackImage]) {
+    const image = new window.Image();
+    image.crossOrigin = "anonymous";
+    image.src = src;
+    lanyardImagePreloads.push(image);
+  }
 }
 
 function TechnologyLogo({ technology }: { technology: string }) {
@@ -131,7 +147,6 @@ export default function Home() {
   const formCooldownUntilRef = useRef(0);
   const formCooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [techPaused, setTechPaused] = useState(false);
-  const [lanyardReady, setLanyardReady] = useState(false);
   const [ghostCursorReady, setGhostCursorReady] = useState(false);
   const [worksNearViewport, setWorksNearViewport] = useState(false);
   const [formStatus, setFormStatus] = useState("");
@@ -171,15 +186,26 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const lanyardTimer = window.setTimeout(() => setLanyardReady(true), 350);
     const pointerSupportsCursor = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const cursorTimer = pointerSupportsCursor
       ? window.setTimeout(() => setGhostCursorReady(true), 1200)
       : null;
 
     return () => {
-      window.clearTimeout(lanyardTimer);
       if (cursorTimer !== null) window.clearTimeout(cursorTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+
+    const preventPinch = (event: Event) => event.preventDefault();
+    document.addEventListener("gesturestart", preventPinch);
+    document.addEventListener("gesturechange", preventPinch);
+
+    return () => {
+      document.removeEventListener("gesturestart", preventPinch);
+      document.removeEventListener("gesturechange", preventPinch);
     };
   }, []);
 
@@ -391,20 +417,16 @@ export default function Home() {
                 </div>
               </div>
               <div className="hero-lanyard-stage">
-                {lanyardReady ? (
-                  <Lanyard
-                    frontImage={withBasePath("/my_love.jpg")}
-                    backImage={withBasePath("/my_photo.jpg")}
-                    size={0.58}
-                    mobileSize={0.24}
-                    anchor={0.63}
-                    strapLength={0.35}
-                    breeze={0.82}
-                    intro
-                  />
-                ) : (
-                  null
-                )}
+                <Lanyard
+                  frontImage={lanyardFrontImage}
+                  backImage={lanyardBackImage}
+                  size={0.58}
+                  mobileSize={0.24}
+                  anchor={0.63}
+                  strapLength={0.35}
+                  breeze={0.82}
+                  intro
+                />
                 <p className="hero-lanyard-hint" aria-hidden="true">
                 </p>
               </div>

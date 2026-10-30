@@ -12,6 +12,7 @@ const CARD_SIZES = {
 const ANCHORS = { left: 0.27, center: 0.5, right: 0.73 };
 const THICKNESS = 0.018;
 const BEVEL = 0.007;
+const FACE_GAP = 0.005;
 const JOINTS = 4;
 const NODE_WEIGHT = 1 / 0.05;
 const MAX_STEP = 1 / 960;
@@ -24,6 +25,9 @@ const RING_TUBE = 0.0135;
 const EYELET_RADIUS = 0.036;
 const CLAMP_BODY = 0.15;
 const FACE_WIDTH = 1024;
+const INTRO_TILT = Math.PI / 12;
+const MOBILE_MAX_DPR = 2.5;
+const MOBILE_PIXEL_BUDGET = 4.5e6;
 
 const FINISHES = {
   glossy: { roughness: 0.5, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.16, foil: 0, anisotropy: 0 },
@@ -333,6 +337,8 @@ const makeCanvasTexture = (canvas, anisotropy) => {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = anisotropy;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
   return texture;
 };
 
@@ -370,6 +376,8 @@ const buildGrainTexture = () => {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(2, 3);
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
   return texture;
 };
 
@@ -573,11 +581,15 @@ const placeHanging = (sim, layout, intro) => {
   nodes[0].copy(anchor);
   for (let i = 1; i <= JOINTS; i++) {
     nodes[i].copy(nodes[i - 1]);
-    if (intro) nodes[i].x += sim.rest;
-    else nodes[i].y -= sim.rest;
+    if (intro) {
+      nodes[i].x += Math.sin(INTRO_TILT) * sim.rest;
+      nodes[i].y -= Math.cos(INTRO_TILT) * sim.rest;
+    } else {
+      nodes[i].y -= sim.rest;
+    }
   }
   body.quaternion.identity();
-  if (intro) body.quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2);
+  if (intro) body.quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), INTRO_TILT);
   body.hang.set(0, layout.hangY, 0);
   const offset = scratch.a.copy(body.hang).applyQuaternion(body.quaternion);
   body.position.copy(nodes[JOINTS]).sub(offset);
@@ -778,6 +790,10 @@ const Lanyard = ({
     container.appendChild(canvas);
 
     const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    const compactView =
+      (window.matchMedia?.('(pointer: coarse)').matches ?? false) || window.innerWidth <= 680;
+    const grainStrength = compactView ? 0.01 : 0.015;
+    const weaveStrength = compactView ? 0.3 : 0.7;
     const scene = new THREE.Scene();
     const environment = buildEnvironment(renderer);
     scene.environment = environment.texture;
@@ -800,6 +816,8 @@ const Lanyard = ({
     strapTexture.wrapT = THREE.RepeatWrapping;
     const grain = buildGrainTexture();
     const weave = buildWeaveTexture();
+    grain.anisotropy = anisotropy;
+    weave.anisotropy = anisotropy;
     const foilUniforms = {
       foilStrength: { value: 0 },
       foilAspect: { value: 1.4 },
@@ -820,12 +838,12 @@ const Lanyard = ({
     const frontMaterial = new THREE.MeshPhysicalMaterial({
       map: frontTexture,
       normalMap: grain,
-      normalScale: new THREE.Vector2(0.015, 0.015)
+      normalScale: new THREE.Vector2(grainStrength, grainStrength)
     });
     const backMaterial = new THREE.MeshPhysicalMaterial({
       map: backTexture,
       normalMap: grain,
-      normalScale: new THREE.Vector2(0.015, 0.015)
+      normalScale: new THREE.Vector2(grainStrength, grainStrength)
     });
     frontMaterial.onBeforeCompile = injectFoil;
     backMaterial.onBeforeCompile = injectFoil;
@@ -834,7 +852,7 @@ const Lanyard = ({
     const bandMaterial = new THREE.MeshPhysicalMaterial({
       map: strapTexture,
       normalMap: weave,
-      normalScale: new THREE.Vector2(0.7, 0.7),
+      normalScale: new THREE.Vector2(weaveStrength, weaveStrength),
       roughness: 0.68,
       sheen: 1,
       sheenRoughness: 0.42,
@@ -907,7 +925,8 @@ const Lanyard = ({
     const repaintStrap = () => {
       const s = settingsRef.current;
       tileRatio = paintStrap(strapCanvas, images.strap, parseColor(s.strapColor, [0.07, 0.07, 0.07]));
-      weave.repeat.set(2, 2 * tileRatio);
+      const weaveAcross = compactView ? 1 : 2;
+      weave.repeat.set(weaveAcross, weaveAcross * tileRatio);
       strapTexture.dispose();
       strapTexture.needsUpdate = true;
       start();
@@ -954,9 +973,9 @@ const Lanyard = ({
         bodyMesh.geometry = geometry.body;
         frontMesh.geometry = geometry.face;
         backMesh.geometry = geometry.face.clone();
-        frontMesh.position.z = THICKNESS / 2 + BEVEL + 0.0006;
+        frontMesh.position.z = THICKNESS / 2 + BEVEL + FACE_GAP;
         backMesh.rotation.y = Math.PI;
-        backMesh.position.z = -(THICKNESS / 2 + BEVEL + 0.0006);
+        backMesh.position.z = -(THICKNESS / 2 + BEVEL + FACE_GAP);
         ring.position.set(0, layout.ringY, 0);
         applied.framingKey = '';
       }
@@ -974,16 +993,19 @@ const Lanyard = ({
       const imageKey = `${s.frontImage}|${s.backImage}|${s.strapImage}`;
       if (imageKey !== applied.imageKey) {
         const token = ++imageToken;
-        Promise.all([
-          loadImage(imageCache, s.frontImage),
-          loadImage(imageCache, s.backImage),
-          loadImage(imageCache, s.strapImage)
-        ]).then(([front, back, strap]) => {
+        loadImage(imageCache, s.frontImage).then(front => {
           if (!alive || token !== imageToken) return;
           images.front = front;
-          images.back = back;
-          images.strap = strap;
           paintFaces();
+        });
+        loadImage(imageCache, s.backImage).then(back => {
+          if (!alive || token !== imageToken) return;
+          images.back = back;
+          paintFaces();
+        });
+        loadImage(imageCache, s.strapImage).then(strap => {
+          if (!alive || token !== imageToken) return;
+          images.strap = strap;
           repaintStrap();
         });
       }
@@ -1252,7 +1274,11 @@ const Lanyard = ({
     const resize = () => {
       view.width = Math.max(1, container.clientWidth);
       view.height = Math.max(1, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const budgetDpr = Math.sqrt(MOBILE_PIXEL_BUDGET / (view.width * view.height));
+      const dpr = compactView
+        ? Math.max(1, Math.min(window.devicePixelRatio || 1, MOBILE_MAX_DPR, budgetDpr))
+        : Math.min(window.devicePixelRatio || 1, 2);
+      renderer.setPixelRatio(dpr);
       renderer.setSize(view.width, view.height, false);
       apply();
       render();
