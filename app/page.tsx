@@ -5,6 +5,7 @@ import { faOpenai } from "@fortawesome/free-brands-svg-icons";
 import emailjs from "@emailjs/browser";
 import type { CSSProperties, FormEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import FlexCarousel from "@/components/FlexCarousel";
 import GhostCursor from "@/components/GhostCursor";
 import { profile } from "@/data/profile";
 import {
@@ -120,38 +121,7 @@ function InstagramIcon() {
   );
 }
 
-function ArrowUpIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M5.5 14.5L12 8l6.5 6.5"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
-function ArrowDownIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M5.5 9.5L12 16l6.5-6.5"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
 export default function Home() {
-  const worksScrollerRef = useRef<HTMLDivElement>(null);
   const heroFrameRef = useRef<number | null>(null);
   const heroElementRef = useRef<HTMLElement | null>(null);
   const experienceSectionRef = useRef<HTMLElement>(null);
@@ -166,8 +136,18 @@ export default function Home() {
   const [isSending, setIsSending] = useState(false);
   const [experienceMotionReady, setExperienceMotionReady] = useState(false);
   const [experienceRevealed, setExperienceRevealed] = useState(false);
+  const [activeWorkIndex, setActiveWorkIndex] = useState(0);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
+  const activeWork = profile.works[activeWorkIndex] ?? profile.works[0];
+  const workCarouselItems = profile.works.map((work) => ({
+    src: withBasePath(work.image.src),
+    alt: work.image.alt,
+    title: work.title,
+    subtitle: work.type,
+    description: work.description,
+    href: work.link.href
+  }));
 
   useEffect(() => {
     return () => {
@@ -207,20 +187,6 @@ export default function Home() {
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
-
-  const scrollWorksBy = (direction: "up" | "down") => {
-    const node = worksScrollerRef.current;
-
-    if (!node) {
-      return;
-    }
-
-    const amount = Math.min(380, node.clientHeight * 0.85);
-    node.scrollBy({
-      top: direction === "up" ? -amount : amount,
-      behavior: "smooth"
-    });
-  };
 
   const handleCopyEmail = async () => {
     if (!emailContact) {
@@ -600,64 +566,59 @@ export default function Home() {
         </ol>
       </section>
 
-      <section className="content-section" id="works">
+      <section className="content-section" id="works" aria-labelledby="works-heading">
         <div className="section-heading works-heading">
-          <h2>Arts and Crafts</h2>
+          <h2 id="works-heading">Arts and Crafts</h2>
         </div>
         <div className="works-viewport">
-          <div
-            className="works-scroller"
-            ref={worksScrollerRef}
-            tabIndex={0}
-            aria-label="Selected works. Scroll vertically to browse projects."
-          >
-            <div className="works-grid">
-              {profile.works.map((work, index) => (
-                <a
-                  className="work-card"
-                  key={`${work.title}-${index}`}
-                  href={work.link.href}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <div className="work-card-surface">
-                    <div className="work-image-wrap">
-                      <Image
-                        src={withBasePath(work.image.src)}
-                        alt={work.image.alt}
-                        width={720}
-                        height={420}
-                        className="work-image"
-                      />
-                    </div>
-                    <div className="work-card-body">
-                      <p className="work-type">{work.type}</p>
-                      <h3>{work.title}</h3>
-                      <p>{work.description}</p>
-                      <span className="work-link">{work.link.label}</span>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
+          <div className="works-carousel-frame">
+            <FlexCarousel
+              items={workCarouselItems}
+              preset="arch"
+              intro="bloom"
+              cardHeight={0.58}
+              gap={16}
+              fit="landscape"
+              radius={2}
+              bend={0.16}
+              reach={0.46}
+              curl="twist"
+              dispersion={0.45}
+              squeeze={0.12}
+              focusOnClick
+              captions={false}
+              captureWheel={false}
+              ariaLabel="Selected project previews"
+              onChange={setActiveWorkIndex}
+            />
           </div>
-          <div className="works-controls" role="group" aria-label="Project gallery controls">
-            <button
-              className="works-arrow"
-              type="button"
-              aria-label="Scroll projects up"
-              onClick={() => scrollWorksBy("up")}
-            >
-              <ArrowUpIcon />
-            </button>
-            <button
-              className="works-arrow"
-              type="button"
-              aria-label="Scroll projects down"
-              onClick={() => scrollWorksBy("down")}
-            >
-              <ArrowDownIcon />
-            </button>
+          <div className="works-project-info">
+            {activeWork ? (
+              <div className="works-project-copy">
+                <p className="works-project-meta">
+                  {String(activeWorkIndex + 1).padStart(2, "0")} / {String(profile.works.length).padStart(2, "0")}
+                  {" · "}
+                  {activeWork.type}
+                </p>
+                <h3>{activeWork.title}</h3>
+                <p>{activeWork.description}</p>
+              </div>
+            ) : null}
+            {activeWork ? (
+              <a className="button button-ghost works-project-link" href={activeWork.link.href} target="_blank" rel="noreferrer">
+                {activeWork.link.label}
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M7 17 17 7M8 7h9v9"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              </a>
+            ) : null}
           </div>
         </div>
       </section>
