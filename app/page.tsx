@@ -38,7 +38,7 @@ const FlexCarousel = dynamic(() => import("@/components/FlexCarousel"), {
 const GhostCursor = dynamic(() => import("@/components/GhostCursor"), { ssr: false });
 const Lanyard = dynamic(() => import("@/components/Lanyard"), {
   ssr: false,
-  loading: () => <LanyardPoster />
+  loading: () => null
 });
 
 const WORKS_PER_PAGE = 5;
@@ -61,20 +61,6 @@ const technologyIcons: Partial<Record<string, SimpleIcon>> = {
 
 function withBasePath(path: string) {
   return path.startsWith("/") ? `${publicBasePath}${path}` : path;
-}
-
-function LanyardPoster() {
-  return (
-    <div className="hero-lanyard-poster" aria-hidden="true">
-      <Image
-        src={withBasePath("/my_love.jpg")}
-        alt=""
-        fill
-        sizes="(max-width: 680px) 25vw, 19vw"
-        priority
-      />
-    </div>
-  );
 }
 
 function TechnologyLogo({ technology }: { technology: string }) {
@@ -417,7 +403,7 @@ export default function Home() {
                     intro
                   />
                 ) : (
-                  <LanyardPoster />
+                  null
                 )}
                 <p className="hero-lanyard-hint" aria-hidden="true">
                 </p>

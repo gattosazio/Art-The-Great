@@ -361,23 +361,6 @@ ul {
   color: var(--black);
 }
 
-.hero-lanyard-poster {
-  position: absolute;
-  top: clamp(6rem, 15vh, 10rem);
-  left: 63%;
-  width: clamp(9rem, 19vw, 15rem);
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 70%);
-  border-radius: 0.7rem;
-  box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 28%);
-  transform: translateX(-50%);
-}
-
-.hero-lanyard-poster img {
-  object-fit: cover;
-}
-
 .content-section {
   width: min(calc(100% - 3rem), var(--max-width));
   margin-inline: auto;
@@ -1385,12 +1368,6 @@ ul {
     grid-row: 2;
     width: 100%;
     padding: 1.5rem 0 5.5rem;
-  }
-
-  .hero-lanyard-poster {
-    top: clamp(5rem, 14vh, 7rem);
-    left: calc(50% + 1.5rem);
-    width: clamp(6rem, 25vw, 9rem);
   }
 
   .hero h1 {
