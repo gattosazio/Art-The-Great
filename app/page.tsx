@@ -37,6 +37,8 @@ type HeroStyle = CSSProperties & {
 };
 type TechSectionStyle = CSSProperties & { "--tech-bg-image": string };
 
+const WORKS_PER_PAGE = 5;
+
 const technologyIcons: Partial<Record<string, SimpleIcon>> = {
   JavaScript: siJavascript,
   TypeScript: siTypescript,
@@ -124,7 +126,6 @@ function InstagramIcon() {
 export default function Home() {
   const heroFrameRef = useRef<number | null>(null);
   const heroElementRef = useRef<HTMLElement | null>(null);
-  const experienceSectionRef = useRef<HTMLElement>(null);
   const heroRevealTargetRef = useRef(0);
   const heroRevealCurrentRef = useRef(0);
   const formCooldownUntilRef = useRef(0);
@@ -134,12 +135,20 @@ export default function Home() {
   const [emailCopyStatus, setEmailCopyStatus] = useState("");
   const [formOnCooldown, setFormOnCooldown] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [experienceMotionReady, setExperienceMotionReady] = useState(false);
-  const [experienceRevealed, setExperienceRevealed] = useState(false);
   const [activeWorkIndex, setActiveWorkIndex] = useState(0);
+  const viewedWorkIndicesRef = useRef(new Set<number>([0]));
+  const [allWorksViewed, setAllWorksViewed] = useState(false);
+  const [worksPage, setWorksPage] = useState(0);
   const emailContact = profile.contacts.find((contact) => contact.type === "email");
   const socialContacts = profile.contacts.filter((contact) => contact.type !== "email");
   const activeWork = profile.works[activeWorkIndex] ?? profile.works[0];
+  const worksPageCount = Math.ceil(profile.works.length / WORKS_PER_PAGE);
+  const visibleWorks = profile.works.slice(
+    worksPage * WORKS_PER_PAGE,
+    (worksPage + 1) * WORKS_PER_PAGE
+  );
+  const firstVisibleWork = worksPage * WORKS_PER_PAGE + 1;
+  const lastVisibleWork = Math.min((worksPage + 1) * WORKS_PER_PAGE, profile.works.length);
   const workCarouselItems = profile.works.map((work) => ({
     src: withBasePath(work.image.src),
     alt: work.image.alt,
@@ -157,36 +166,18 @@ export default function Home() {
     };
   }, []);
 
-  useEffect(() => {
-    const section = experienceSectionRef.current;
-
-    if (!section) {
+  const handleWorkChange = (index: number) => {
+    if (index < 0 || index >= profile.works.length) {
       return;
     }
 
-    if (
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-      !("IntersectionObserver" in window)
-    ) {
-      setExperienceRevealed(true);
-      return;
+    setActiveWorkIndex(index);
+    viewedWorkIndicesRef.current.add(index);
+
+    if (viewedWorkIndicesRef.current.size >= profile.works.length) {
+      setAllWorksViewed(true);
     }
-
-    setExperienceMotionReady(true);
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setExperienceRevealed(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
+  };
 
   const handleCopyEmail = async () => {
     if (!emailContact) {
@@ -498,19 +489,17 @@ export default function Home() {
           </section>
         </div>
 
+        <div className="lower-sections">
         <section
           className="content-section experience-section"
           id="experience"
           aria-labelledby="experience-heading"
-          ref={experienceSectionRef}
         >
           <div className="section-heading">
             <h2 id="experience-heading">Places I&apos;ve made my mark</h2>
           </div>
           <ol
             className="experience-list"
-            data-motion-ready={experienceMotionReady}
-            data-revealed={experienceRevealed}
           >
           {profile.experience.map((item) => (
             <li
@@ -571,55 +560,145 @@ export default function Home() {
           <h2 id="works-heading">Arts and Crafts</h2>
         </div>
         <div className="works-viewport">
-          <div className="works-carousel-frame">
-            <FlexCarousel
-              items={workCarouselItems}
-              preset="arch"
-              intro="bloom"
-              cardHeight={0.58}
-              gap={16}
-              fit="landscape"
-              radius={2}
-              bend={0.16}
-              reach={0.46}
-              curl="twist"
-              dispersion={0.45}
-              squeeze={0.12}
-              focusOnClick
-              captions={false}
-              captureWheel={false}
-              ariaLabel="Selected project previews"
-              onChange={setActiveWorkIndex}
-            />
-          </div>
-          <div className="works-project-info">
-            {activeWork ? (
-              <div className="works-project-copy">
-                <p className="works-project-meta">
-                  {String(activeWorkIndex + 1).padStart(2, "0")} / {String(profile.works.length).padStart(2, "0")}
-                  {" · "}
-                  {activeWork.type}
-                </p>
-                <h3>{activeWork.title}</h3>
-                <p>{activeWork.description}</p>
+          {!allWorksViewed ? (
+            <>
+              <div className="works-carousel-frame">
+                <FlexCarousel
+                  items={workCarouselItems}
+                  preset="arch"
+                  intro="bloom"
+                  cardHeight={0.58}
+                  gap={16}
+                  fit="landscape"
+                  radius={2}
+                  bend={0.16}
+                  reach={0.46}
+                  curl="twist"
+                  dispersion={0.45}
+                  squeeze={0.12}
+                  focusOnClick
+                  captions={false}
+                  captureWheel
+                  ariaLabel="Selected project previews"
+                  onChange={handleWorkChange}
+                />
               </div>
-            ) : null}
-            {activeWork ? (
-              <a className="button button-ghost works-project-link" href={activeWork.link.href} target="_blank" rel="noreferrer">
-                {activeWork.link.label}
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M7 17 17 7M8 7h9v9"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.8"
-                  />
-                </svg>
-              </a>
-            ) : null}
-          </div>
+              <div className="works-project-info">
+                {activeWork ? (
+                  <div className="works-project-copy">
+                    <p className="works-project-meta">
+                      {String(activeWorkIndex + 1).padStart(2, "0")} / {String(profile.works.length).padStart(2, "0")}
+                      {" · "}
+                      {activeWork.type}
+                    </p>
+                    <h3>{activeWork.title}</h3>
+                    <p>{activeWork.description}</p>
+                  </div>
+                ) : null}
+                {activeWork ? (
+                  <a className="button button-ghost works-project-link" href={activeWork.link.href} target="_blank" rel="noreferrer">
+                    {activeWork.link.label}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M7 17 17 7M8 7h9v9"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                      />
+                    </svg>
+                  </a>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <>
+              <ol
+                className="works-project-list"
+                aria-label="Projects on this page"
+                key={worksPage}
+              >
+                {visibleWorks.map((work) => (
+                  <li className="works-project-row" key={work.title}>
+                    <div className="works-project-row-copy">
+                      <p className="works-project-meta">{work.type}</p>
+                      <h3>{work.title}</h3>
+                      <p>{work.description}</p>
+                      <a href={work.link.href} target="_blank" rel="noreferrer">
+                        {work.link.label}
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            d="M7 17 17 7M8 7h9v9"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                          />
+                        </svg>
+                      </a>
+                    </div>
+                    <Image
+                      className="works-project-row-image"
+                      src={withBasePath(work.image.src)}
+                      alt={work.image.alt}
+                      width={240}
+                      height={150}
+                    />
+                  </li>
+                ))}
+              </ol>
+              {worksPageCount > 1 ? (
+                <nav className="works-pagination" aria-label="Project list pages">
+                  <p aria-live="polite" aria-atomic="true">
+                    Projects {firstVisibleWork}–{lastVisibleWork} of {profile.works.length}
+                  </p>
+                  <div className="works-pagination-controls">
+                    <button
+                      type="button"
+                      onClick={() => setWorksPage((page) => page - 1)}
+                      disabled={worksPage === 0}
+                      aria-label="Show previous projects"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d="M19 12H5m0 0 7 7m-7-7 7-7"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.8"
+                        />
+                      </svg>
+                      Previous
+                    </button>
+                    <span>
+                      Page {worksPage + 1} of {worksPageCount}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setWorksPage((page) => page + 1)}
+                      disabled={worksPage === worksPageCount - 1}
+                      aria-label="Show more projects"
+                    >
+                      Next
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d="M5 12h14m0 0-7-7m7 7-7 7"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.8"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </nav>
+              ) : null}
+            </>
+          )}
         </div>
       </section>
 
@@ -707,6 +786,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
       </main>
       <footer className="site-footer">
         <p>© 2026 Art Sumondong</p>

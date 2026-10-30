@@ -64,7 +64,6 @@ export const profile: Profile = {
   role: "Fullstack Engineer",
   navItems: [
     { label: "Home", href: "#home" },
-    { label: "Stack", href: "#stack" },
     { label: "Experience", href: "#experience" },
     { label: "Works", href: "#works" },
     { label: "Contact", href: "#contact" }
