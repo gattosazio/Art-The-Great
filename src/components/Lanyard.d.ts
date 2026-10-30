@@ -9,7 +9,8 @@ type LanyardProps = {
   finish?: "glossy" | "matte" | "holographic" | "metallic";
   cornerRadius?: number;
   size?: number;
-  anchor?: "left" | "center" | "right";
+  mobileSize?: number;
+  anchor?: "left" | "center" | "right" | number;
   strapLength?: number;
   strapImage?: string;
   strapColor?: string;

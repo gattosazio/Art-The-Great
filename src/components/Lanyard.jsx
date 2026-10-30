@@ -710,6 +710,7 @@ const Lanyard = ({
   finish = 'glossy',
   cornerRadius = 0.3,
   size = 0.6,
+  mobileSize,
   anchor = 'center',
   strapLength = 0.5,
   strapImage,
@@ -738,6 +739,7 @@ const Lanyard = ({
     finish,
     cornerRadius,
     size,
+    mobileSize,
     anchor,
     strapLength,
     strapImage,
@@ -867,7 +869,6 @@ const Lanyard = ({
     const tuck = new THREE.Vector3();
     const curve = new THREE.CatmullRomCurve3(controls, false, 'centripetal');
     const view = { width: 1, height: 1 };
-    let frameWidth = 1;
     let layout = cardLayout('portrait', 0.3);
     let applied = {};
     let strapScale = STRAP_WIDTH;
@@ -915,11 +916,13 @@ const Lanyard = ({
     const frameView = () => {
       const s = settingsRef.current;
       const aspect = view.width / view.height;
-      let viewHeight = layout.height / clamp(s.size, 0.15, 0.9);
+      const referenceHeight = Math.max(1, container.parentElement?.clientHeight || container.clientHeight);
+      const responsiveSize =
+        container.parentElement?.clientWidth <= 680 && s.mobileSize !== undefined ? s.mobileSize : s.size;
+      let viewHeight = (layout.height / clamp(responsiveSize, 0.15, 0.9)) * (view.height / referenceHeight);
       const minimumWidth = layout.width / 0.72;
       if (viewHeight * aspect < minimumWidth) viewHeight = minimumWidth / aspect;
       const viewWidth = viewHeight * aspect;
-      frameWidth = viewWidth;
       camera.aspect = aspect;
       camera.position.set(0, 0, viewHeight / 2 / Math.tan((FOV * Math.PI) / 360));
       camera.lookAt(0, 0, 0);
@@ -928,7 +931,8 @@ const Lanyard = ({
       foilUniforms.foilKey.value.set(-2.5, 4, 6).normalize().transformDirection(camera.matrixWorldInverse);
       foilUniforms.foilFill.value.set(3, -1, 4).normalize().transformDirection(camera.matrixWorldInverse);
       foilUniforms.foilTop.value.set(0.5, 4.5, 8).normalize().transformDirection(camera.matrixWorldInverse);
-      const anchorX = ((ANCHORS[s.anchor] ?? 0.5) - 0.5) * viewWidth;
+      const anchor = typeof s.anchor === 'number' ? clamp(s.anchor, 0, 1) : ANCHORS[s.anchor] ?? 0.5;
+      const anchorX = (anchor - 0.5) * viewWidth;
       const anchorY = viewHeight / 2 + 0.2;
       const cardTop = viewHeight / 2 - viewHeight * mix(0.12, 0.42, clamp(s.strapLength, 0, 1));
       const hangTop = cardTop + (layout.hangY - layout.height / 2);
@@ -956,7 +960,7 @@ const Lanyard = ({
         ring.position.set(0, layout.ringY, 0);
         applied.framingKey = '';
       }
-      const framingKey = `${layoutKey}|${s.size}|${s.anchor}|${s.strapLength}|${view.width}|${view.height}`;
+      const framingKey = `${layoutKey}|${s.size}|${s.mobileSize}|${s.anchor}|${s.strapLength}|${view.width}|${view.height}`;
       if (framingKey !== applied.framingKey) {
         frameView();
         if (!placed) {
@@ -1157,9 +1161,7 @@ const Lanyard = ({
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
-    const grabOffset = new THREE.Vector3();
-    const cardRight = new THREE.Vector3();
-    const cardUp = new THREE.Vector3();
+    const previousCursor = document.documentElement.style.cursor;
 
     const toPointer = event => {
       const rect = canvas.getBoundingClientRect();
@@ -1177,7 +1179,7 @@ const Lanyard = ({
     };
 
     const setCursor = value => {
-      if (canvas.style.cursor !== value) canvas.style.cursor = value;
+      document.documentElement.style.cursor = value || previousCursor;
     };
 
     const flip = point => {
@@ -1194,6 +1196,7 @@ const Lanyard = ({
 
     const onPointerDown = event => {
       if (!settingsRef.current.interactive || event.button > 0) return;
+      if (event.target instanceof Element && event.target.closest('a, button, input, textarea, select')) return;
       toPointer(event);
       const hit = pickCard();
       if (!hit) return;
@@ -1205,7 +1208,6 @@ const Lanyard = ({
         target: hit.point.clone()
       };
       press = { x: event.clientX, y: event.clientY, time: performance.now(), point: hit.point.clone() };
-      canvas.setPointerCapture?.(event.pointerId);
       setCursor('grabbing');
       event.preventDefault();
       start();
@@ -1217,14 +1219,6 @@ const Lanyard = ({
       if (sim.grab) {
         if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) press = null;
         raycaster.ray.at(sim.grab.reach, sim.grab.target);
-        grabOffset.copy(sim.grab.local).applyQuaternion(sim.body.quaternion);
-        cardRight.set(1, 0, 0).applyQuaternion(sim.body.quaternion);
-        cardUp.set(0, 1, 0).applyQuaternion(sim.body.quaternion);
-        const halfWidth =
-          (layout.width * Math.abs(cardRight.x) + layout.height * Math.abs(cardUp.x)) / 2;
-        const maxCenterX = Math.max(0, frameWidth / 2 - halfWidth - 0.04);
-        const centerX = sim.grab.target.x - grabOffset.x;
-        sim.grab.target.x += clamp(centerX, -maxCenterX, maxCenterX) - centerX;
         start();
         return;
       }
@@ -1238,23 +1232,22 @@ const Lanyard = ({
       sim.grab = null;
       if (press && event.type === 'pointerup' && performance.now() - press.time < 450) flip(press.point);
       press = null;
-      canvas.releasePointerCapture?.(event.pointerId);
       setCursor(hovering && event.pointerType !== 'touch' ? 'grab' : '');
       start();
     };
 
     const onTouchStart = event => {
       if (!settingsRef.current.interactive || event.touches.length !== 1) return;
+      if (event.target instanceof Element && event.target.closest('a, button, input, textarea, select')) return;
       toPointer(event.touches[0]);
       if (pickCard()) event.preventDefault();
     };
 
-    canvas.addEventListener('pointerdown', onPointerDown);
-    canvas.addEventListener('pointermove', onPointerMove);
-    canvas.addEventListener('pointerup', onPointerUp);
-    canvas.addEventListener('pointercancel', onPointerUp);
-    canvas.addEventListener('lostpointercapture', onPointerUp);
-    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+    window.addEventListener('touchstart', onTouchStart, { passive: false });
 
     const resize = () => {
       view.width = Math.max(1, container.clientWidth);
@@ -1287,12 +1280,12 @@ const Lanyard = ({
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
-      canvas.removeEventListener('pointerdown', onPointerDown);
-      canvas.removeEventListener('pointermove', onPointerMove);
-      canvas.removeEventListener('pointerup', onPointerUp);
-      canvas.removeEventListener('pointercancel', onPointerUp);
-      canvas.removeEventListener('lostpointercapture', onPointerUp);
-      canvas.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      window.removeEventListener('touchstart', onTouchStart);
+      document.documentElement.style.cursor = previousCursor;
       [bodyMesh, frontMesh, backMesh, ring, clampMesh, eyelet, band].forEach(mesh => mesh.geometry?.dispose());
       [frontMaterial, backMaterial, edgeMaterial, metalMaterial, bandMaterial].forEach(material => material.dispose());
       [frontTexture, backTexture, strapTexture, grain, weave].forEach(texture => texture.dispose());

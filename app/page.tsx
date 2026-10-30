@@ -350,7 +350,11 @@ export default function Home() {
               <div className="hero-lanyard-stage">
                 <Lanyard
                   frontImage={withBasePath("/my_love.jpg")}
+                  backImage={withBasePath("/my_photo.jpg")}
                   size={0.58}
+                  mobileSize={0.24}
+                  anchor={0.63}
+                  strapLength={0.35}
                   breeze={0.82}
                   intro
                 />
