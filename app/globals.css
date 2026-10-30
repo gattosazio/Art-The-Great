@@ -725,147 +725,267 @@ ul {
 }
 
 .works-viewport {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1rem;
+  width: 100%;
   margin-top: 1.5rem;
 }
 
-.works-scroller {
-  max-height: min(74svh, 720px);
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 0.25rem 0.5rem 0.25rem 0;
-  scroll-snap-type: y mandatory;
-  scrollbar-color: #666 #151515;
-  scrollbar-width: thin;
-  -ms-overflow-style: auto;
-}
-
-.works-grid {
-  display: grid;
+.works-carousel-frame {
   width: 100%;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: stretch;
-  gap: 1rem;
-}
-
-.work-card {
-  display: block;
-  min-width: 0;
-  scroll-snap-align: start;
-  scroll-margin-block: 0.25rem;
-  outline-offset: 5px;
-}
-
-.work-card-surface {
-  display: flex;
-  min-height: 280px;
+  height: clamp(32rem, 50vw, 40rem);
   overflow: hidden;
-  background: var(--bg-raised);
-  transition: background-color 200ms ease, transform 220ms ease;
 }
 
-.work-card:hover .work-card-surface,
-.work-card:focus-visible .work-card-surface {
-  background: var(--surface);
-  transform: translateY(-4px);
-}
-
-.work-image-wrap {
+.flex-carousel {
   position: relative;
-  flex: 0 0 min(38%, 420px);
-  overflow: hidden;
-  background: #252525;
-}
-
-.work-image {
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  color: var(--text);
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: contain;
+  outline: none;
+}
+
+.flex-carousel[data-hover="open"] {
+  cursor: zoom-in;
+}
+
+.flex-carousel[data-hover="close"] {
+  cursor: zoom-out;
+}
+
+.flex-carousel[data-dragging] {
+  cursor: grabbing;
+}
+
+.flex-carousel:focus-visible {
+  outline: 2px solid var(--muted);
+  outline-offset: -2px;
+}
+
+.flex-carousel canvas {
   position: absolute;
   inset: 0;
-  object-fit: cover;
-  filter: grayscale(1) contrast(0.96);
-  transition: filter 240ms ease, transform 340ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.work-card:hover .work-image,
-.work-card:focus-visible .work-image {
-  filter: grayscale(1) contrast(1.08);
-  transform: scale(1.035);
-}
-
-.work-card-body {
+.flex-carousel__caption {
+  position: absolute;
+  z-index: 1;
+  top: calc(50% + var(--flex-carousel-half) * var(--flex-carousel-lift, 1) + 1.4rem);
+  right: 1rem;
+  left: 1rem;
   display: flex;
-  flex: 1;
-  min-width: 0;
   flex-direction: column;
-  padding: clamp(1.25rem, 3vw, 2rem);
+  align-items: center;
+  gap: 0.4rem;
+  pointer-events: none;
+  text-align: center;
+  animation: flex-carousel-reveal 700ms ease both;
 }
 
-.work-type {
+.flex-carousel__title {
+  display: flex;
+  max-width: 100%;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  animation: flex-carousel-title 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flex-carousel__subtitle {
+  color: var(--muted);
+  font-size: 0.82em;
+  font-weight: 400;
+}
+
+.flex-carousel__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
   color: var(--muted);
   font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.72;
+  transition: opacity 300ms ease;
+}
+
+.flex-carousel__count[data-hidden] {
+  opacity: 0;
+}
+
+.flex-carousel__digits {
+  display: inline-flex;
+}
+
+.flex-carousel__digit {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+
+.flex-carousel__reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flex-carousel__reel span {
+  height: 1em;
+}
+
+.flex-carousel__slash {
+  opacity: 0.6;
+}
+
+.flex-carousel__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.flex-carousel__fallback {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: #777 #111;
+}
+
+.flex-carousel__fallback-item {
+  display: flex;
+  width: min(78vw, 22rem);
+  flex: 0 0 min(78vw, 22rem);
+  flex-direction: column;
+  scroll-snap-align: center;
+  background: var(--bg-raised);
+}
+
+.flex-carousel__fallback-item img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: grayscale(1);
+}
+
+.flex-carousel__fallback-item > div {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.flex-carousel__fallback-item h3 {
+  font-size: 1rem;
+}
+
+.flex-carousel__fallback-item p {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.flex-carousel__fallback-item a {
+  width: fit-content;
+  color: var(--white);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.flex-carousel__empty {
+  margin: auto;
+  color: var(--muted);
+}
+
+.flex-carousel__fallback a:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 3px;
+}
+
+.works-project-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: 1rem;
+}
+
+.works-project-copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.works-project-meta {
+  color: var(--text-subtle);
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.work-card h3 {
-  margin-top: 0.7rem;
-  font-size: 1.2rem;
+.works-project-copy h3 {
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
-.work-card-body > p:not(.work-type) {
-  margin-top: 0.65rem;
+.works-project-copy > p:last-child {
+  max-width: 62ch;
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.7;
 }
 
-.work-link {
-  display: inline-block;
-  margin-top: auto;
-  padding-top: 1.15rem;
-  color: var(--white);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-decoration: underline;
-  text-decoration-color: #777;
+.works-project-link {
+  flex: 0 0 auto;
+  gap: 0.65rem;
 }
 
-.works-arrow {
-  display: inline-flex;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #5a5a58;
-  border-radius: 50%;
-  background: #151515;
-  color: var(--white);
-  cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+.works-project-link:hover {
+  transform: none;
 }
 
-.works-arrow:hover {
-  background: var(--white);
-  color: var(--black);
-  transform: translateY(-2px);
+.works-project-link svg {
+  width: 1rem;
+  height: 1rem;
 }
 
-.works-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+@keyframes flex-carousel-title {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.works-arrow svg {
-  width: 1.2rem;
-  height: 1.2rem;
+@keyframes flex-carousel-reveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .contact-section {
@@ -1052,9 +1172,7 @@ ul {
 .nav-link:focus-visible,
 .button:focus-visible,
 .tech-toggle:focus-visible,
-.work-card:focus-visible,
-.works-arrow:focus-visible,
-.works-scroller:focus-visible,
+.works-project-link:focus-visible,
 .contact-email-copy:focus-visible,
 .social-link:focus-visible {
   outline: 2px solid #f1f1ee;
@@ -1236,19 +1354,18 @@ ul {
     font-size: 0.74rem;
   }
 
-  .works-scroller {
-    max-height: 68svh;
-    padding-right: 0.25rem;
+  .works-carousel-frame {
+    height: clamp(26rem, 105vw, 32rem);
   }
 
-  .work-card-surface {
-    min-height: 0;
+  .works-project-info {
+    align-items: flex-start;
     flex-direction: column;
+    gap: 1rem;
   }
 
-  .work-image-wrap {
-    flex-basis: auto;
-    aspect-ratio: 16 / 10;
+  .works-project-link {
+    min-height: 42px;
   }
 
   .contact-fields {
@@ -1325,6 +1442,15 @@ ul {
   .experience-item:focus-within .experience-logo {
     filter: grayscale(0);
     transform: none;
+  }
+
+  .flex-carousel__caption,
+  .flex-carousel__title {
+    animation: none;
+  }
+
+  .flex-carousel__reel {
+    transition: none;
   }
 
   .ghost-cursor {
